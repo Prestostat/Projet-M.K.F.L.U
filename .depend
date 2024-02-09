@@ -5,7 +5,10 @@ main.o: main.cpp ///usr/include/GL/glew.h OPENGL/header/Renderer.h \
  OPENGL/header/../header/Shader.h OPENGL/header/VertexBuffer.h \
  OPENGL/header/IndexBuffer.h OPENGL/header/VertexArray.h \
  OPENGL/header/Shader.h OPENGL/header/VertexBufferLayout.h \
- OPENGL/header/../header/Renderer.h physique/header/particule.h
+ OPENGL/header/../header/Renderer.h physique/header/particule.h \
+ physique/header/ensemble.h physique/header/particule.h
+ensemble.o: physique/cpp/ensemble.cpp physique/cpp/../header/ensemble.h \
+ physique/cpp/../header/particule.h physique/cpp/../header/particule.h
 particule.o: physique/cpp/particule.cpp \
  physique/cpp/../header/particule.h
 IndexBuffer.o: OPENGL/cpp/IndexBuffer.cpp \

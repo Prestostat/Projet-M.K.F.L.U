@@ -1,5 +1,5 @@
 #PARTIE A MODIFIER : Liste des fichiers .cpp (et uniquement les .cpp) à compiler
-SOURCES=main.cpp physique/cpp/particule.cpp OPENGL/cpp/IndexBuffer.cpp OPENGL/cpp/Renderer.cpp OPENGL/cpp/Shader.cpp OPENGL/cpp/VertexArray.cpp OPENGL/cpp/VertexBuffer.cpp
+SOURCES=main.cpp physique/cpp/ensemble.cpp physique/cpp/particule.cpp OPENGL/cpp/IndexBuffer.cpp OPENGL/cpp/Renderer.cpp OPENGL/cpp/Shader.cpp OPENGL/cpp/VertexArray.cpp OPENGL/cpp/VertexBuffer.cpp
 #FIN DE LA PARTIE A MODIFIER
 
 # Nom du compilateur
