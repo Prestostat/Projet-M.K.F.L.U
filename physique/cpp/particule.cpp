@@ -27,3 +27,19 @@ void Particule::collision(float amorti){
     if (y+rayon >1){y=1-rayon-amorti*(y+rayon-1);vy*=-1*amorti;}
     if (y-rayon <-1){y=-1+rayon+amorti*(-y+rayon-1);vy*=-1*amorti;}
 }
+float fonction_influence(float x,float rayon_influence){
+    float volume = PI*pow(rayon_influence,4)/6; //normalisation pour que l'intégrale du volume de l'influence soit 1, a essayer en exponentielle décroissante ?
+    return(pow((rayon_influence-x),2)/volume);
+
+}
+float Particule::influence(float ex,float ey,float rayon_influence){
+    float distance = sqrt((x-ex)*(x-ex)+(y-ey)*(y-ey));
+    if (distance>rayon_influence){
+        return(0);
+    }
+    else {
+        return (fonction_influence(distance, rayon_influence));
+    }
+
+
+}

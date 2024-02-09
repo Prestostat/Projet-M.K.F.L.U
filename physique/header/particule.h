@@ -14,6 +14,8 @@ class Particule {
     void inirapide();
     void position_particule(unsigned int nb_points,float* position);
     void collision(float ammorti);
+    float influence(float ex,float ey,float rayon_influence);
 
 };
+float fonction_influence(float x,float rayon_influence);
 #endif

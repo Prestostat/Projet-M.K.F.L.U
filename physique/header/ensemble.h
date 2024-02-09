@@ -6,6 +6,7 @@ class Ensemble {
     public:
     unsigned int nombre_de_particules;
     Particule* data;
+    float masse;
     Ensemble (unsigned int nb,float rayon);
     ~Ensemble();
     Ensemble (const Ensemble&);
@@ -13,6 +14,7 @@ class Ensemble {
     void gravite(float dt,float g);
     void deplacement(float dt);
     void evolution(float dt,float g);
+    float densite_ponctuelle(float ex, float ey, float rayon_influence);
 
     
 
