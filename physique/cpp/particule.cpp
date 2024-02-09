@@ -21,3 +21,9 @@ void Particule::position_particule(unsigned int nb_points,float* position){
         //cout << position [2*i] << " " <<position[2*i+1] << endl;
     }
 }
+void Particule::collision(float amorti){
+    if (x+rayon >1){x=1-rayon-amorti*(x+rayon-1);vx*=-1*amorti;}
+    if (x-rayon <-1){x=-1+rayon+amorti*(-x+rayon-1);vx*=-1*amorti;}
+    if (y+rayon >1){y=1-rayon-amorti*(y+rayon-1);vy*=-1*amorti;}
+    if (y-rayon <-1){y=-1+rayon+amorti*(-y+rayon-1);vy*=-1*amorti;}
+}

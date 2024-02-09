@@ -9,6 +9,11 @@ class Ensemble {
     Ensemble (unsigned int nb,float rayon);
     ~Ensemble();
     Ensemble (const Ensemble&);
+
+    void gravite(float dt,float g);
+    void deplacement(float dt);
+    void evolution(float dt,float g);
+
     
 
 

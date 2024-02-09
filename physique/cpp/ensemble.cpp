@@ -25,3 +25,22 @@ Ensemble::Ensemble(const Ensemble& other) {
     }
 
 }
+
+void Ensemble::gravite(float dt,float g) {
+    for (unsigned int i=0; i<nombre_de_particules;i++) {
+        data[i].vy-=g*dt;
+    }
+}
+
+void Ensemble::deplacement(float dt) {
+    for (unsigned int i=0; i<nombre_de_particules;i++) {
+        data[i].x+=data[i].vx*dt;
+        data[i].y+=data[i].vy*dt;
+        data[i].collision(0.9);
+    }
+}
+void Ensemble::evolution(float dt, float g){
+    gravite(dt,g);
+    deplacement(dt);
+}
+
