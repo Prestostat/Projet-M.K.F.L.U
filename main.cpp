@@ -20,12 +20,12 @@ using namespace std;
 
 
 int main(){
-    float x=0.0f;
-    float y=0.0f;
     float rayon = 0.2f;
     unsigned int nombre_de_points =20; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
-    unsigned int nombre_de_particules =1;
+    unsigned int nombre_de_particules =6;
+    Ensemble fluide = Ensemble(nombre_de_particules,rayon);
+
 
     
 
@@ -89,8 +89,7 @@ int main(){
         renderer.Clear();
 
         for (unsigned int i=0;i<nombre_de_particules;i++){
-
-            test2.position_particule(nombre_de_points,position );
+            fluide.data[i].position_particule(nombre_de_points,position );
 
             shader.Bind();
             shader.SetUniform4f("u_color",1.0f,0.0f,0.0f,1.0f);            
