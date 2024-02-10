@@ -8,7 +8,7 @@ Ensemble::Ensemble(unsigned int nb,float rayon){
     nombre_de_particules=nb;
     masse = 1;
     multiplicateur_pression = 500000;
-    densite_visee=500;
+    densite_visee=100;
     data = new Particule[nb];
     unsigned int N; // nombre dont le carré est le 1er carré supérieur à nb
     unsigned int temp =0;
