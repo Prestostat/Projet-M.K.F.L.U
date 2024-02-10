@@ -39,7 +39,21 @@ float Particule::influence(float ex,float ey,float rayon_influence){
     }
     else {
         return (fonction_influence(distance, rayon_influence));
+
     }
 
 
 }
+ float derive_fonction_influence(float x, float rayon_influence){
+    float volume = PI*pow(rayon_influence,4)/6;
+    return(2*(x-rayon_influence)/volume);
+ }
+ float Particule::grad_influence(float ex,float ey,float rayon_influence){
+    float distance = sqrt((x-ex)*(x-ex)+(y-ey)*(y-ey));
+    if (distance>rayon_influence){
+        return(0);
+    }
+    else {
+        return (derive_fonction_influence(distance, rayon_influence));
+    }
+ }

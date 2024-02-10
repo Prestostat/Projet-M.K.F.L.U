@@ -20,10 +20,10 @@ using namespace std;
 
 
 int main(){
-    float rayon = 0.02f;
+    float rayon = 0.01f;
     unsigned int nombre_de_points =20; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
-    unsigned int nombre_de_particules =50;
+    unsigned int nombre_de_particules =1000;
     Ensemble fluide = Ensemble(nombre_de_particules,rayon);
 
 
@@ -101,7 +101,7 @@ int main(){
             IndexBuffer ib(indices,3*nombre_de_triangles);
             renderer.Draw(va,ib,shader);
         }
-        fluide.evolution(0.1,0.001);
+        fluide.evolution(0.00001,1000000,0.08);
 
         
 
