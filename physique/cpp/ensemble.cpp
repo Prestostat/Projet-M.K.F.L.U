@@ -96,3 +96,6 @@ void Ensemble::force_pression(float dt,float rayon_influence){
     free(d);free(pression);
 
 }
+
+//void Ensemble::liste_indice 
+//utiliser qsort sunr un tableau tableau(indice de la particule, clé) et faire une fonction qui compare que les clés

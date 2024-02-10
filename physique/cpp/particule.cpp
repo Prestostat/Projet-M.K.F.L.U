@@ -57,3 +57,17 @@ float Particule::influence(float ex,float ey,float rayon_influence){
         return (derive_fonction_influence(distance, rayon_influence));
     }
  }
+
+int* Particule::coordonnee(float rayon_influence){
+    int* coord = (float*)malloc(sizeof(int));
+    coord[0]=(int)(x/rayon_influence);
+    coord[1]=(int)(y/rayon_influence);
+    return(coord);
+}
+
+int Particule::cle(float rayon_influence, int nombre_de_particules){
+    int a = 15823;
+    int b =9737333;
+    int* coord = coordonnee(rayon_influence);
+    retrun((coord[0]*a+coord[1]*b)%nombre_de_particules);
+}  
