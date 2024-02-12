@@ -91,8 +91,7 @@ int main(){
     ImGui_ImplGlfwGL3_Init(window, true);
     ImGui::StyleColorsDark();
     bool show_demo_window = true;
-    bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    float clear_color[3] = {1.0f,0.0f,0.0f};
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -108,12 +107,11 @@ int main(){
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
 
             if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
                 counter++;
             ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+            ImGui::Text("multiplicateur de manque d'intelligence = %d", counter);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         }
@@ -122,7 +120,7 @@ int main(){
             fluide.data[i].position_particule(nombre_de_points,position );
 
             shader.Bind();
-            shader.SetUniform4f("u_color",1.0f,0.0f,0.0f,1.0f);            
+            shader.SetUniform4f("u_color",clear_color[0],clear_color[1],clear_color[2],1.0f);            
             VertexArray va;                
             VertexBuffer vb(position,nombre_de_points*2*sizeof(float));
             VertexBufferLayout layout;
