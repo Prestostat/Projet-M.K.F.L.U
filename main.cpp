@@ -101,15 +101,10 @@ int main(){
             IndexBuffer ib(indices,3*nombre_de_triangles);
             renderer.Draw(va,ib,shader);
         }
-        fluide.evolution(0.00001,1000000,0.08); // dt,g,rayon_influence
-
-        
-
-
-
+        fluide.evolution(0.00001,1000000, 0.07); // dt,g,rayon_influence
         /* Swap front and back buffers */
         GLCall(glfwSwapBuffers(window));
-
+//oui
         /* Poll for and process events */
         GLCall(glfwPollEvents());
     }

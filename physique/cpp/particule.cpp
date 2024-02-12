@@ -59,9 +59,15 @@ float Particule::influence(float ex,float ey,float rayon_influence){
  }
 
 int* Particule::coordonnee(float rayon_influence){
-    int* coord = (float*)malloc(sizeof(int));
+    int* coord = (int*)malloc(sizeof(int));
     coord[0]=(int)(x/rayon_influence);
     coord[1]=(int)(y/rayon_influence);
+    return(coord);
+}
+int* coordonnee(float ex,float ey,float rayon_influence){
+    int* coord = (int*)malloc(sizeof(int));
+    coord[0]=(int)(ex/rayon_influence);
+    coord[1]=(int)(ey/rayon_influence);
     return(coord);
 }
 
@@ -69,5 +75,16 @@ int Particule::cle(float rayon_influence, int nombre_de_particules){
     int a = 15823;
     int b =9737333;
     int* coord = coordonnee(rayon_influence);
-    retrun((coord[0]*a+coord[1]*b)%nombre_de_particules);
+    int temp = (coord[0]*a+coord[1]*b)%nombre_de_particules;
+    temp+= nombre_de_particules;
+    temp = temp%nombre_de_particules;
+    return(temp);
+}  
+int cle(int* coord, int nombre_de_particules){
+    int a = 15823;
+    int b =9737333;
+    int temp = (coord[0]*a+coord[1]*b)%nombre_de_particules;
+    temp+= nombre_de_particules;
+    temp = temp%nombre_de_particules;
+    return(temp);
 }  

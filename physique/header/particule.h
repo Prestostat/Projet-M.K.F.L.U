@@ -22,4 +22,6 @@ class Particule {
 };
 float fonction_influence(float x,float rayon_influence);
 float derive_fonction_influence(float x, float rayon_influence);
+int* coordonnee(float ex, float ey,float rayon_influence);
+int cle(int* coord, int nombre_de_particules);
 #endif
