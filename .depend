@@ -6,7 +6,9 @@ main.o: main.cpp ///usr/include/GL/glew.h OPENGL/header/Renderer.h \
  OPENGL/header/IndexBuffer.h OPENGL/header/VertexArray.h \
  OPENGL/header/Shader.h OPENGL/header/VertexBufferLayout.h \
  OPENGL/header/../header/Renderer.h physique/header/particule.h \
- physique/header/ensemble.h physique/header/particule.h
+ physique/header/ensemble.h physique/header/particule.h \
+ OPENGL/src/vendor/imgui/imgui.h OPENGL/src/vendor/imgui/imconfig.h \
+ OPENGL/src/vendor/imgui/imgui_impl_glfw_gl3.h
 ensemble.o: physique/cpp/ensemble.cpp physique/cpp/../header/ensemble.h \
  physique/cpp/../header/particule.h physique/cpp/../header/particule.h
 particule.o: physique/cpp/particule.cpp \
@@ -44,3 +46,18 @@ VertexBuffer.o: OPENGL/cpp/VertexBuffer.cpp \
  OPENGL/cpp/../header/../header/../header/VertexBuffer.h \
  OPENGL/cpp/../header/../header/Shader.h \
  OPENGL/cpp/../header/VertexBuffer.h
+imgui_demo.o: OPENGL/src/vendor/imgui/imgui_demo.cpp \
+ OPENGL/src/vendor/imgui/imgui.h OPENGL/src/vendor/imgui/imconfig.h
+imgui_draw.o: OPENGL/src/vendor/imgui/imgui_draw.cpp \
+ OPENGL/src/vendor/imgui/imgui.h OPENGL/src/vendor/imgui/imconfig.h \
+ OPENGL/src/vendor/imgui/imgui_internal.h \
+ OPENGL/src/vendor/imgui/stb_textedit.h \
+ OPENGL/src/vendor/imgui/stb_rect_pack.h \
+ OPENGL/src/vendor/imgui/stb_truetype.h
+imgui_impl_glfw_gl3.o: OPENGL/src/vendor/imgui/imgui_impl_glfw_gl3.cpp \
+ OPENGL/src/vendor/imgui/imgui.h OPENGL/src/vendor/imgui/imconfig.h \
+ OPENGL/src/vendor/imgui/imgui_impl_glfw_gl3.h
+imgui.o: OPENGL/src/vendor/imgui/imgui.cpp \
+ OPENGL/src/vendor/imgui/imgui.h OPENGL/src/vendor/imgui/imconfig.h \
+ OPENGL/src/vendor/imgui/imgui_internal.h \
+ OPENGL/src/vendor/imgui/stb_textedit.h
