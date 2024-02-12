@@ -29,9 +29,9 @@ int main(){
     unsigned int nombre_de_triangles = nombre_de_points-2;
     unsigned int nombre_de_particules =500;
     Ensemble fluide = Ensemble(nombre_de_particules,rayon);
-    static float g = 0.0f;
+    static float logg = 0.0f;
     float masse = 1;
-    float multiplicateur_pression = 1000000;
+    float logmultiplicateur_pression = 6;
     float densite_visee=200;
     float moinslogdt = 5;
     float rayon_influence = 0.1;
@@ -111,8 +111,8 @@ int main(){
             ImGui::SliderFloat("rayon visuelle de la particule", &rayon, 0.0f, 0.05f);
             ImGui::SliderFloat("-log(dt)", &moinslogdt, 4.0f, 6.0f);
             ImGui::SliderFloat("rayon_influence", &rayon_influence, 0.0f, 1.0f);
-            ImGui::SliderFloat("gravité", &g, -1000000.0f, 1000000.0f);
-            ImGui::SliderFloat("mulplicateur de pression", &multiplicateur_pression, -1000000.0f, 1000000.0f);
+            ImGui::SliderFloat("log(gravité)", &logg, 0.0f, 10.0f);
+            ImGui::SliderFloat("log(mulplicateur de pression)", &logmultiplicateur_pression, 0.0f, 10.0f);
             ImGui::SliderFloat("densité visée", &densite_visee, 0.0f, 1000.0f);
             ImGui::SliderFloat("coeff d'amortissement", &coeff_amorti, 0.0f, 2.0f);   
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -130,6 +130,7 @@ int main(){
         for (unsigned int i=0;i<nombre_de_particules;i++){
             fluide.data[i].rayon = rayon;
             fluide.data[i].position_particule(nombre_de_points,position );
+            
 
             shader.Bind();
             shader.SetUniform4f("u_color",clear_color[0],clear_color[1],clear_color[2],1.0f);            
@@ -141,9 +142,8 @@ int main(){
             IndexBuffer ib(indices,3*nombre_de_triangles);
             renderer.Draw(va,ib,shader);
         }
-
-
-        fluide.evolution(pow(10,-moinslogdt),g, rayon_influence,masse,multiplicateur_pression,densite_visee,coeff_amorti); //float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef
+        //cout << fluide.data[0].x << endl;
+        fluide.evolution(pow(10,-moinslogdt),pow(10,logg), rayon_influence,masse,pow(10,logmultiplicateur_pression),densite_visee,coeff_amorti); //float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef
         
 
 

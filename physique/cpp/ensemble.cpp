@@ -62,16 +62,17 @@ float Ensemble::densite_ponctuelle(float ex,float ey,float rayon_influence, int*
     int* coord_temporaire = (int*)malloc(2*sizeof(int));            
     int* liste_cellules = (int*)malloc(9*sizeof(int));
 
-    for(unsigned int i=0;i<9;i++){
+    for(int i=0;i<9;i++){
         coord_temporaire[0]=coord[0]-1+i%3;
         coord_temporaire[1]=coord[1]-1+i/3;
         liste_cellules[i] = cle(coord_temporaire,nombre_de_particules);
     }
     for(unsigned int i=0;i<9;i++){
         int j=indice_debut[liste_cellules[i]];
-        if (j>0) {
-            while(liste_indice[j][1]==indice_debut[liste_cellules[i]]){
+        if (j>=0) {
+            while(liste_indice[j][1]==liste_indice[indice_debut[liste_cellules[i]]][1]){
                 d+=masse*data[liste_indice[j][0]].influence(ex,ey,rayon_influence);
+                //cout << masse*data[liste_indice[j][0]].influence(ex,ey,rayon_influence) << endl;
                 j++;
             }
         }
@@ -131,6 +132,7 @@ void Ensemble::force_pression(float dt,float rayon_influence){
         data[i].vy+=dt*pression[1]/d[i];
     }
     free(d);free(pression);
+    
 
 }
 
