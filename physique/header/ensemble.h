@@ -9,13 +9,14 @@ class Ensemble {
     float masse;
     float densite_visee;
     float multiplicateur_pression;
+    float coeff_amorti;
     Ensemble (unsigned int nb,float rayon);
     ~Ensemble();
     Ensemble (const Ensemble&);
 
     void gravite(float dt,float g);
     void deplacement(float dt);
-    void evolution(float dt,float g,float rayon_influence);
+    void evolution(float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef);
     float densite_ponctuelle(float ex, float ey, float rayon_influence,int** indice_debut, int* indices);
     float densite_ponctuelle_naive(float ex, float ey, float rayon_influence);
     float* densite(float rayon_influence);

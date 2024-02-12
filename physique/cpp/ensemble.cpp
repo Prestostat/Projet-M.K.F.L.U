@@ -10,6 +10,7 @@ Ensemble::Ensemble(unsigned int nb,float rayon){
     masse = 1;
     multiplicateur_pression = 1000000;
     densite_visee=200;
+    coeff_amorti = 1;
     data = new Particule[nb];
     unsigned int N; // nombre dont le carré est le 1er carré supérieur à nb
     unsigned int temp =0;
@@ -43,10 +44,14 @@ void Ensemble::deplacement(float dt) {
     for (unsigned int i=0; i<nombre_de_particules;i++) {
         data[i].x+=data[i].vx*dt;
         data[i].y+=data[i].vy*dt;
-        data[i].collision(0.5);
+        data[i].collision(coeff_amorti);
     }
 }
-void Ensemble::evolution(float dt, float g,float rayon_influence){
+void Ensemble::evolution(float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef){
+    masse = m;
+    multiplicateur_pression = multipression;
+    densite_visee = dvisee;
+    coeff_amorti = coef;
     gravite(dt,g);
     force_pression(dt,rayon_influence);
     deplacement(dt);

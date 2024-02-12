@@ -30,7 +30,12 @@ int main(){
     unsigned int nombre_de_particules =500;
     Ensemble fluide = Ensemble(nombre_de_particules,rayon);
     static float g = 0.0f;
-
+    float masse = 1;
+    float multiplicateur_pression = 1000000;
+    float densite_visee=200;
+    float moinslogdt = 5;
+    float rayon_influence = 0.1;
+    float coeff_amorti = 0.9;
 
     
 
@@ -103,7 +108,13 @@ int main(){
             
             static int counter = 0;
             ImGui::Text("méca flu :sunglassess: ");                           // Display some text (you can use a format string too)
-            ImGui::SliderFloat("gravité", &g, -1000000.0f, 1000000.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+            ImGui::SliderFloat("rayon visuelle de la particule", &rayon, 0.0f, 0.05f);
+            ImGui::SliderFloat("-log(dt)", &moinslogdt, 4.0f, 6.0f);
+            ImGui::SliderFloat("rayon_influence", &rayon_influence, 0.0f, 1.0f);
+            ImGui::SliderFloat("gravité", &g, -1000000.0f, 1000000.0f);
+            ImGui::SliderFloat("mulplicateur de pression", &multiplicateur_pression, -1000000.0f, 1000000.0f);
+            ImGui::SliderFloat("densité visée", &densite_visee, 0.0f, 1000.0f);
+            ImGui::SliderFloat("coeff d'amortissement", &coeff_amorti, 0.0f, 2.0f);   
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
@@ -117,6 +128,7 @@ int main(){
         }
 
         for (unsigned int i=0;i<nombre_de_particules;i++){
+            fluide.data[i].rayon = rayon;
             fluide.data[i].position_particule(nombre_de_points,position );
 
             shader.Bind();
@@ -131,7 +143,7 @@ int main(){
         }
 
 
-        fluide.evolution(0.00001,g, 0.07); // dt,g,rayon_influence
+        fluide.evolution(pow(10,-moinslogdt),g, rayon_influence,masse,multiplicateur_pression,densite_visee,coeff_amorti); //float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef
         
 
 
