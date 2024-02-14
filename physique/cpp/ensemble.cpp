@@ -53,15 +53,17 @@ void Ensemble::evolution(float dt, float g,float rayon_influence, float m,float 
     densite_visee = dvisee;
     coeff_amorti = coef;
     gravite(dt,g);
+    indices = liste_indice (rayon_influence);
+    tri_liste_indice(indices);
+    indice_debut = liste_indice_debut(indices);
     force_pression(dt,rayon_influence);
     deplacement(dt);
 }
-float Ensemble::densite_ponctuelle(float ex,float ey,float rayon_influence, int** liste_indice, int* indice_debut){
+float Ensemble::densite_ponctuelle(float ex,float ey,float rayon_influence){
     float d=0;
     int* coord = coordonnee(ex,ey,rayon_influence);
     int* coord_temporaire = (int*)malloc(2*sizeof(int));            
     int* liste_cellules = (int*)malloc(9*sizeof(int));
-
     for(int i=0;i<9;i++){
         coord_temporaire[0]=coord[0]-1+i%3;
         coord_temporaire[1]=coord[1]-1+i/3;
@@ -70,16 +72,19 @@ float Ensemble::densite_ponctuelle(float ex,float ey,float rayon_influence, int*
     for(unsigned int i=0;i<9;i++){
         int j=indice_debut[liste_cellules[i]];
         if (j>=0) {
-            while(liste_indice[j][1]==liste_indice[indice_debut[liste_cellules[i]]][1]){
-                d+=masse*data[liste_indice[j][0]].influence(ex,ey,rayon_influence);
-                //cout << masse*data[liste_indice[j][0]].influence(ex,ey,rayon_influence) << endl;
+            while(indices[j][1]==indices[indice_debut[liste_cellules[i]]][1]){
+                d+=masse*data[indices[j][0]].influence(ex,ey,rayon_influence);
                 j++;
+                if ((unsigned int)j==nombre_de_particules){
+                    break;
+                }
             }
         }
     }
     return(d);
 }
-float Ensemble::densite_ponctuelle_naive(float ex,float ey,float rayon_influence){
+float Ensemble::densite_ponctuelle_naive(float ex,float ey,float rayon_influence) // plus mauvaise complexité que celle au dessus
+{
     float d=0;
     for(unsigned int i=0;i<nombre_de_particules;i++){
     d+=masse*data[i].influence(ex,ey,rayon_influence);
@@ -88,13 +93,9 @@ float Ensemble::densite_ponctuelle_naive(float ex,float ey,float rayon_influence
 }
 float* Ensemble::densite(float rayon_influence){
     float* dens=(float*)malloc(nombre_de_particules*sizeof(float));
-    int** indices = liste_indice (rayon_influence);
-    tri_liste_indice(indices);
-    int* indice_debut = liste_indice_debut(indices);
-    //for (unsigned int i=0;i<nombre_de_particules ; i++){cout << indice_debut[i] << endl;}
     for(unsigned int i=0;i<nombre_de_particules;i++){
-        //dens[i]=densite_ponctuelle(data[i].x,data[i].y,rayon_influence,indices,indice_debut);
-        dens[i]= densite_ponctuelle_naive(data[i].x,data[i].y,rayon_influence);
+        dens[i]=densite_ponctuelle(data[i].x,data[i].y,rayon_influence);
+        //dens[i]= densite_ponctuelle_naive(data[i].x,data[i].y,rayon_influence);
         
     }
     return(dens);
@@ -103,23 +104,40 @@ float* Ensemble::pression_ponctuelle(unsigned int n,  float* densite,float rayon
     float* pression = (float*)malloc(2*sizeof(float));
     pression[0]=0;
     pression[1]=0;
-    for (unsigned int i=0; i<nombre_de_particules;i++){
-        if (i!=n) {
-            float distance = sqrt((data[n].x-data[i].x)*(data[n].x-data[i].x)+(data[n].y-data[i].y)*(data[n].y-data[i].y));
-            if (distance == 0) {cout << "distance entre 2 particule égale a 0, force nan" << endl;}
-            else {
-            float dirx = (data[n].x-data[i].x)/distance;
-            float diry = (data[n].y-data[i].y)/distance;
-            float grad_influence = data[i].grad_influence(data[n].x,data[n].y,rayon_influence);
-            float pression_mutuelle;
-            pression_mutuelle = ((-densite[i]+densite_visee)+(-densite[n]+densite_visee))/2.0*multiplicateur_pression;
-            pression[0]+=(pression_mutuelle*grad_influence*dirx/densite[i]);
-            pression[1]+=(pression_mutuelle*grad_influence*diry/densite[i]);
-            }
+    int* coord = coordonnee(data[n].x,data[n].y,rayon_influence);
+    int* coord_temporaire = (int*)malloc(2*sizeof(int));            
+    int* liste_cellules = (int*)malloc(9*sizeof(int));
+    for(int i=0;i<9;i++){
+        coord_temporaire[0]=coord[0]-1+i%3;
+        coord_temporaire[1]=coord[1]-1+i/3;
+        liste_cellules[i] = cle(coord_temporaire,nombre_de_particules);
+    }
+    for(unsigned int i=0;i<9;i++){
+        int j=indice_debut[liste_cellules[i]];
+        if (j>=0) {
+            while(indices[j][1]==indices[indice_debut[liste_cellules[i]]][1]){
+                unsigned int m=indices[j][0];
+                if (m!=n) {
+                    float distance = sqrt((data[n].x-data[m].x)*(data[n].x-data[m].x)+(data[n].y-data[m].y)*(data[n].y-data[m].y));
+                    if (distance == 0) {cout << "distance entre 2 particule égale a 0, force nan" << endl;}
+                    else {
+                        float dirx = (data[n].x-data[m].x)/distance;
+                        float diry = (data[n].y-data[m].y)/distance;
+                        float grad_influence = data[m].grad_influence(data[n].x,data[n].y,rayon_influence);
+                        float pression_mutuelle;
+                        pression_mutuelle = ((-densite[m]+densite_visee)+(-densite[n]+densite_visee))/2.0*multiplicateur_pression;
+                        pression[0]+=(pression_mutuelle*grad_influence*dirx/densite[m]);
+                        pression[1]+=(pression_mutuelle*grad_influence*diry/densite[m]);
+                    }
          
+                }
+                j++;
+                if ((unsigned int)j==nombre_de_particules){
+                    break;
+                }
+            }
         }
     }
-    
     return(pression);
 }
 
@@ -165,7 +183,9 @@ int* Ensemble::liste_indice_debut(int**liste){
         if (temp != liste[i][1]) {
             temp = liste[i][1];
             debut_indice[temp]=i;
+            
         }
+        
     }
     return(debut_indice);
 }

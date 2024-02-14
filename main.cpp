@@ -24,17 +24,17 @@ using namespace std;
 
 
 int main(){
-    float rayon = 0.01f;
+    float rayon = 0.005f;
     unsigned int nombre_de_points =10; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
-    unsigned int nombre_de_particules =500;
+    unsigned int nombre_de_particules =2000;
     Ensemble fluide = Ensemble(nombre_de_particules,rayon);
     static float logg = 0.0f;
     float masse = 1;
     float logmultiplicateur_pression = 6;
     float densite_visee=200;
     float moinslogdt = 5;
-    float rayon_influence = 0.1;
+    float rayon_influence = 0.03;
     float coeff_amorti = 0.9;
 
     

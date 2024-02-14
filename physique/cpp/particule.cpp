@@ -59,13 +59,13 @@ float Particule::influence(float ex,float ey,float rayon_influence){
  }
 
 int* Particule::coordonnee(float rayon_influence){
-    int* coord = (int*)malloc(sizeof(int));
+    int* coord = (int*)malloc(2*sizeof(int));
     coord[0]=(int)(x/rayon_influence);
     coord[1]=(int)(y/rayon_influence);
     return(coord);
 }
 int* coordonnee(float ex,float ey,float rayon_influence){
-    int* coord = (int*)malloc(sizeof(int));
+    int* coord = (int*)malloc(2*sizeof(int));
     coord[0]=(int)(ex/rayon_influence);
     coord[1]=(int)(ey/rayon_influence);
     return(coord);
