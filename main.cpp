@@ -27,7 +27,7 @@ int main(){
     float rayon = 0.005f;
     unsigned int nombre_de_points =10; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
-    unsigned int nombre_de_particules =2000;
+    unsigned int nombre_de_particules =1000;
     Ensemble fluide = Ensemble(nombre_de_particules,rayon);
     static float logg = 0.0f;
     float masse = 1;
