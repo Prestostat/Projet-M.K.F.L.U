@@ -33,18 +33,24 @@ int main(){
     float rayon = 0.005f;
     unsigned int nombre_de_points =3; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
-    unsigned int nombre_de_particules =4000;
+    unsigned int nombre_de_particules =2000;
     Ensemble fluide = Ensemble(nombre_de_particules,rayon);
-    static float logg = 0.0f;
+    static float logg = 6.0f;
     float masse = 1;
-    float logmultiplicateur_pression = 6;
-    float densite_visee=200;
+    float logmultiplicateur_pression = 7;
+    float densite_visee=800;
     float moinslogdt = 5;
-    float rayon_influence = 0.03;
+    float rayon_influence = 0.15;
     float coeff_amorti = 0.9;
-    float viscstrength = 0.1;
+    float viscstrength = 10;
     int affiche_densité =0;
     int resolution_densite = 200;
+    bool clique_gauche = false;
+    bool clique_droit = false;
+    float sourisx=0;
+    float sourisy=0;
+    float rayon_action_clique_gauche = 0.5; // de la souris gauche
+    float puissance_action = -10000000; // de la souris
 
     
 
@@ -97,30 +103,6 @@ int main(){
     unsigned int indices_densite[6] = {0,1,2,1,2,3};
     float position_carre[4*2];
     
-    /*unsigned int indices_densite[(resolution_densite)*(resolution_densite)*2*3];
-    for (unsigned int i =0; i<resolution_densite;i++){
-        for(unsigned int j =0; j<resolution_densite;j++){
-            int  n=(resolution_densite*i+j)*6;
-            indices_densite[n] =resolution_densite*i+j;
-            indices_densite[n+1] =resolution_densite*i+j+1;
-            indices_densite[n+2] =resolution_densite*(i+1)+j;
-            indices_densite[n+3] =resolution_densite*i+j+1;
-            indices_densite[n+4] =resolution_densite*(i+1)+j+1;
-            indices_densite[n+5] =resolution_densite*(i+1)+j;
-            
-        }
-    }
-    float maillage_densite[(resolution_densite+1)*(resolution_densite+1)];
-    float pas = 2.0/resolution_densite;
-    for (unsigned int i =0; i<resolution_densite+1;i++){
-        for(unsigned int j =0; j<resolution_densite+1;j++){
-            maillage_densite[i*(resolution_densite+1)+j]=
-
-        }
-    }*/
-
-
-
 
     Shader shader("OPENGL/res/shaders/Basic.shader");
     Renderer renderer;
@@ -137,7 +119,7 @@ int main(){
         renderer.Clear();
         ImGui_ImplGlfwGL3_NewFrame();
         {
-            
+            ImGuiIO& io = ImGui::GetIO();
             ImGui::Text("méca flu :sunglassess: ");                           // Display some text (you can use a format string too)
             ImGui::SliderFloat("rayon visuelle de la particule", &rayon, 0.0f, 0.05f);
             ImGui::SliderFloat("-log(dt)", &moinslogdt, 4.0f, 6.0f);
@@ -147,6 +129,7 @@ int main(){
             ImGui::SliderFloat("densité visée", &densite_visee, 100.0f, 2000.0f);
             ImGui::SliderFloat("Coef viscosité", &viscstrength, 0.0f, 100.0f);
             ImGui::SliderFloat("coeff d'amortissement", &coeff_amorti, 0.0f, 2.0f);   
+            ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
@@ -157,6 +140,10 @@ int main(){
             ImGui::Text("multiplicateur de manque d'intelligence = %d", affiche_densité);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            clique_gauche=ImGui::IsMouseClicked(0,true);
+            clique_droit=ImGui::IsMouseClicked(1,true);
+            sourisx=io.MousePos.x;
+            sourisy=io.MousePos.y;
         }
         affiche_densité = affiche_densité%2;
 
@@ -217,7 +204,8 @@ int main(){
 
 
         //cout << fluide.data[0].x << endl;
-        fluide.evolution(pow(10,-moinslogdt),pow(10,logg), rayon_influence,masse,pow(10,logmultiplicateur_pression),densite_visee,coeff_amorti,viscstrength); //float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef
+        fluide.evolution(pow(10,-moinslogdt),pow(10,logg), rayon_influence,masse,pow(10,logmultiplicateur_pression),densite_visee,coeff_amorti,viscstrength,
+        clique_gauche,clique_droit,sourisx,sourisy,rayon_action_clique_gauche,puissance_action); //float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef
         
 
 

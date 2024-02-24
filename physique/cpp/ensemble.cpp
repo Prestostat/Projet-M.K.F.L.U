@@ -57,7 +57,7 @@ void Ensemble::deplacement(float dt) {
         data[i].collision(coeff_amorti);
     }
 }
-void Ensemble::evolution(float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef,float viscstrength){
+void Ensemble::evolution(float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef,float viscstrength,bool clique_gauche,bool clique_droit,float sourisx,float sourisy,float rayon_action_clique_gauche, float puissance_action){
     masse = m;
     multiplicateur_pression = multipression;
     densite_visee = dvisee;
@@ -66,9 +66,12 @@ void Ensemble::evolution(float dt, float g,float rayon_influence, float m,float 
     indices = liste_indice (rayon_influence);
     tri_liste_indice(indices);
     indice_debut = liste_indice_debut(indices);
-    force_pression(dt,rayon_influence);
+    float* d = densite(rayon_influence);
+    force_pression(dt,rayon_influence,d);
     visc(dt, rayon_influence, viscstrength);
+    force_souris(dt,clique_gauche,clique_droit,sourisx,sourisy,rayon_action_clique_gauche,puissance_action);
     deplacement(dt);
+    free(d);
 }
 float Ensemble::densite_ponctuelle(float ex,float ey,float rayon_influence){
     float d=0;
@@ -165,15 +168,14 @@ void Ensemble::pression_ponctuelle(unsigned int n,  float* densite,float rayon_i
     free(coord);free(coord_temporaire);free(liste_cellules);
 }
 
-void Ensemble::force_pression(float dt,float rayon_influence){
+void Ensemble::force_pression(float dt,float rayon_influence,float* d){
     float* pression = (float*)malloc(2*sizeof(float));
-    float* d = densite(rayon_influence);
     for(unsigned int i=0; i<nombre_de_particules;i++){
         pression_ponctuelle(i,d,rayon_influence,pression);
         data[i].vx+=dt*pression[0]/d[i];
         data[i].vy+=dt*pression[1]/d[i];
     }
-    free(d);free(pression);
+    free(pression);
     
 
 }
@@ -254,4 +256,35 @@ int* Ensemble::liste_indice_debut(int**liste){
         
     }
     return(debut_indice);
+}
+
+void Ensemble::force_souris(float dt,bool clique_gauche,bool clique_droit, float sourisx, float sourisy,float rayon_action_clique_gauche,float puissance_action){
+    if (clique_gauche && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
+        float x = 2*sourisx/960.0 -1;
+        float y = -sourisy*2/960.0 +1;
+        for(unsigned int i=0;i<nombre_de_particules;i++){
+            float dst = sqrt(pow((data[i].x-x),2)+pow((data[i].y)-y,2));
+            if (dst==0){
+                dst+=1;
+            }
+            if (dst<rayon_action_clique_gauche){  
+                float infl = fonction_influence(dst,rayon_action_clique_gauche);
+                data[i].vx*=0.9;
+                data[i].vy*=0.9;
+                data[i].vx+=dt*infl*puissance_action*((data[i].x-x)/dst);
+                data[i].vy+=dt*infl*puissance_action*((data[i].y-y)/dst);
+            }
+            
+        }
+    }
+    if (clique_droit && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
+        float x = 2*sourisx/960.0 -1;
+        float y = -sourisy*2/960.0 +1;
+        for(unsigned int i=0;i<nombre_de_particules;i++){
+            data[i].vx=0;
+            data[i].vy=0;
+        }
+            
+        
+    }
 }
