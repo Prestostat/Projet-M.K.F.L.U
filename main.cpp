@@ -18,16 +18,22 @@
 #define PI 3.14159265
 using namespace std;
 
-
-
+float maxi(float a,float b){
+    if(a<b){return(b);}
+    else{return(a);}
+}
+float mini(float a,float b){
+    if(a>b){return(b);}
+    else{return(a);}
+}
 
 
 
 int main(){
     float rayon = 0.005f;
-    unsigned int nombre_de_points =10; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
+    unsigned int nombre_de_points =3; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
-    unsigned int nombre_de_particules =2000;
+    unsigned int nombre_de_particules =4000;
     Ensemble fluide = Ensemble(nombre_de_particules,rayon);
     static float logg = 0.0f;
     float masse = 1;
@@ -37,6 +43,8 @@ int main(){
     float rayon_influence = 0.03;
     float coeff_amorti = 0.9;
     float viscstrength = 0.1;
+    int affiche_densité =0;
+    int resolution_densite = 200;
 
     
 
@@ -86,10 +94,33 @@ int main(){
         indices[3*i+2]=i+2;
     }
     float position[nombre_de_points*2];
-    Particule test1;
-    test1.inirapide();
-    Particule test2;
-    test2.initialise_particules(0.5,0.5,0,0,0.2);
+    unsigned int indices_densite[6] = {0,1,2,1,2,3};
+    float position_carre[4*2];
+    
+    /*unsigned int indices_densite[(resolution_densite)*(resolution_densite)*2*3];
+    for (unsigned int i =0; i<resolution_densite;i++){
+        for(unsigned int j =0; j<resolution_densite;j++){
+            int  n=(resolution_densite*i+j)*6;
+            indices_densite[n] =resolution_densite*i+j;
+            indices_densite[n+1] =resolution_densite*i+j+1;
+            indices_densite[n+2] =resolution_densite*(i+1)+j;
+            indices_densite[n+3] =resolution_densite*i+j+1;
+            indices_densite[n+4] =resolution_densite*(i+1)+j+1;
+            indices_densite[n+5] =resolution_densite*(i+1)+j;
+            
+        }
+    }
+    float maillage_densite[(resolution_densite+1)*(resolution_densite+1)];
+    float pas = 2.0/resolution_densite;
+    for (unsigned int i =0; i<resolution_densite+1;i++){
+        for(unsigned int j =0; j<resolution_densite+1;j++){
+            maillage_densite[i*(resolution_densite+1)+j]=
+
+        }
+    }*/
+
+
+
 
     Shader shader("OPENGL/res/shaders/Basic.shader");
     Renderer renderer;
@@ -107,27 +138,60 @@ int main(){
         ImGui_ImplGlfwGL3_NewFrame();
         {
             
-            static int counter = 0;
             ImGui::Text("méca flu :sunglassess: ");                           // Display some text (you can use a format string too)
             ImGui::SliderFloat("rayon visuelle de la particule", &rayon, 0.0f, 0.05f);
             ImGui::SliderFloat("-log(dt)", &moinslogdt, 4.0f, 6.0f);
             ImGui::SliderFloat("rayon_influence", &rayon_influence, 0.0f, 1.0f);
             ImGui::SliderFloat("log(gravité)", &logg, 0.0f, 10.0f);
             ImGui::SliderFloat("log(mulplicateur de pression)", &logmultiplicateur_pression, 0.0f, 10.0f);
-            ImGui::SliderFloat("densité visée", &densite_visee, 0.0f, 1000.0f);
-            ImGui::SliderFloat("Coef viscosité", &viscstrength, 0.0f, 1.0f);
+            ImGui::SliderFloat("densité visée", &densite_visee, 100.0f, 2000.0f);
+            ImGui::SliderFloat("Coef viscosité", &viscstrength, 0.0f, 100.0f);
             ImGui::SliderFloat("coeff d'amortissement", &coeff_amorti, 0.0f, 2.0f);   
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
 
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-                counter++;
+            if (ImGui::Button("affiche densité"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+                affiche_densité++;
             ImGui::SameLine();
-            ImGui::Text("multiplicateur de manque d'intelligence = %d", counter);
+            ImGui::Text("multiplicateur de manque d'intelligence = %d", affiche_densité);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         }
+        affiche_densité = affiche_densité%2;
+
+        if (affiche_densité==1){
+            float pas =2.0/resolution_densite;
+            for (unsigned int i=0;i<resolution_densite*resolution_densite;i++){
+                position_carre[0]=-1.0+i%resolution_densite*pas;
+                position_carre[1]=-1.0+i/resolution_densite*pas;
+                position_carre[2]=-1.0+(i%resolution_densite+1)*pas;
+                position_carre[3]=-1.0+i/resolution_densite*pas;
+                position_carre[4]=-1.0+i%resolution_densite*pas;
+                position_carre[5]=-1.0+(i/resolution_densite+1)*pas;
+                position_carre[6]=-1.0+(i%resolution_densite+1)*pas;
+                position_carre[7]=-1.0+(i/resolution_densite+1)*pas;
+
+                float densité_grille= fluide.densite_ponctuelle(position_carre[0]+pas/2,position_carre[1]+pas/2,rayon_influence);
+                float r=mini(1.0,maxi(0.0,densité_grille/densite_visee -1));
+                float g=mini(0.0,pow(mini(abs(densité_grille/densite_visee),abs(2-densité_grille/densite_visee)),4));
+                float b=maxi(0.0,1-densité_grille/densite_visee);
+
+                shader.Bind();
+                shader.SetUniform4f("u_color",r,g,b,1.0f);            
+                VertexArray va;                
+                VertexBuffer vb(position_carre,4*2*sizeof(float));
+                VertexBufferLayout layout;
+                layout.Push<float>(2);
+                va.AddBuffer(vb,layout);
+                IndexBuffer ib(indices_densite,6);
+                renderer.Draw(va,ib,shader);
+
+            }
+
+            
+        }
+        
 
         for (unsigned int i=0;i<nombre_de_particules;i++){
             fluide.data[i].rayon = rayon;
@@ -144,6 +208,14 @@ int main(){
             IndexBuffer ib(indices,3*nombre_de_triangles);
             renderer.Draw(va,ib,shader);
         }
+
+        
+
+
+
+
+
+
         //cout << fluide.data[0].x << endl;
         fluide.evolution(pow(10,-moinslogdt),pow(10,logg), rayon_influence,masse,pow(10,logmultiplicateur_pression),densite_visee,coeff_amorti,viscstrength); //float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef
         

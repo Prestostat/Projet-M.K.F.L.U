@@ -22,9 +22,9 @@ class Ensemble {
     float densite_ponctuelle(float ex, float ey, float rayon_influence);
     float densite_ponctuelle_naive(float ex, float ey, float rayon_influence);
     float* densite(float rayon_influence);
-    float* pression_ponctuelle(unsigned int n, float* densite,float rayon_influence);
+    void pression_ponctuelle(unsigned int n, float* densite,float rayon_influence,float* pression);
     void force_pression(float dt,float rayon_influence);
-    float* visc_ponctuelle(unsigned int n,float rayon_influence,float viscstrength);
+    void visc_ponctuelle(unsigned int n,float rayon_influence,float viscstrength, float* visc);
     void visc(float dt, float rayon_influence,float viscstrength);
     int** liste_indice(float rayon_influence);
     void tri_liste_indice( int** liste );
