@@ -13,6 +13,19 @@ void Particule::initialise_particules(float xini, float yini,float vxini,float v
 void Particule::inirapide(){
     initialise_particules(0,0,0,0,0.1);
 }
+void Particule::random_initialise_particules(float rayonini){
+    float d=2.0/RAND_MAX;
+    float a =std::rand()*d-1;
+    float b =std::rand()*d-1;
+    x=a;
+    y=b;
+    x_predit=a;
+    y_predit=b;
+    vx=std::rand()*d*10-10;
+    vy=std::rand()*d*10-10;
+    rayon=rayonini;
+    
+}
 
 void Particule::position_particule(unsigned int nb_points,float* position){
     for (unsigned int i=0; i<nb_points;i++){

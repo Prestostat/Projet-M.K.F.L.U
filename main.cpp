@@ -27,7 +27,7 @@ int main(){
     float rayon = 0.005f;
     unsigned int nombre_de_points =10; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
-    unsigned int nombre_de_particules =1000;
+    unsigned int nombre_de_particules =2000;
     Ensemble fluide = Ensemble(nombre_de_particules,rayon);
     static float logg = 0.0f;
     float masse = 1;
@@ -36,6 +36,7 @@ int main(){
     float moinslogdt = 5;
     float rayon_influence = 0.03;
     float coeff_amorti = 0.9;
+    float viscstrength = 0.1;
 
     
 
@@ -114,6 +115,7 @@ int main(){
             ImGui::SliderFloat("log(gravité)", &logg, 0.0f, 10.0f);
             ImGui::SliderFloat("log(mulplicateur de pression)", &logmultiplicateur_pression, 0.0f, 10.0f);
             ImGui::SliderFloat("densité visée", &densite_visee, 0.0f, 1000.0f);
+            ImGui::SliderFloat("Coef viscosité", &viscstrength, 0.0f, 1.0f);
             ImGui::SliderFloat("coeff d'amortissement", &coeff_amorti, 0.0f, 2.0f);   
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
@@ -143,7 +145,7 @@ int main(){
             renderer.Draw(va,ib,shader);
         }
         //cout << fluide.data[0].x << endl;
-        fluide.evolution(pow(10,-moinslogdt),pow(10,logg), rayon_influence,masse,pow(10,logmultiplicateur_pression),densite_visee,coeff_amorti); //float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef
+        fluide.evolution(pow(10,-moinslogdt),pow(10,logg), rayon_influence,masse,pow(10,logmultiplicateur_pression),densite_visee,coeff_amorti,viscstrength); //float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef
         
 
 

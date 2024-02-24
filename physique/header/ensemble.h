@@ -18,12 +18,14 @@ class Ensemble {
 
     void gravite(float dt,float g);
     void deplacement(float dt);
-    void evolution(float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef);
+    void evolution(float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef,float viscstrength);
     float densite_ponctuelle(float ex, float ey, float rayon_influence);
     float densite_ponctuelle_naive(float ex, float ey, float rayon_influence);
     float* densite(float rayon_influence);
     float* pression_ponctuelle(unsigned int n, float* densite,float rayon_influence);
     void force_pression(float dt,float rayon_influence);
+    float* visc_ponctuelle(unsigned int n,float rayon_influence,float viscstrength);
+    void visc(float dt, float rayon_influence,float viscstrength);
     int** liste_indice(float rayon_influence);
     void tri_liste_indice( int** liste );
     int* liste_indice_debut(int**liste);
