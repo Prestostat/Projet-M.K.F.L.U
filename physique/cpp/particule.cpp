@@ -70,7 +70,19 @@ float Particule::influence(float ex,float ey,float rayon_influence){
         return (derive_fonction_influence(distance, rayon_influence));
     }
  }
-
+ float Particule::grad_influence_proche(float ex,float ey,float rayon_influence){
+    float distance = sqrt((x-ex)*(x-ex)+(y-ey)*(y-ey));
+    if (distance>rayon_influence){
+        return(0);
+    }
+    else {
+        return (derive_fonction_influence_proche(distance, rayon_influence));
+    }
+ }
+ float derive_fonction_influence_proche(float x, float rayon_influence){
+    float volume = 2*PI*pow(rayon_influence,5)/5;
+    return(4*pow((x-rayon_influence),5)/volume);
+ }
 int* Particule::coordonnee(float rayon_influence){
     int* coord = (int*)malloc(2*sizeof(int));
     coord[0]=(int)(x/rayon_influence);

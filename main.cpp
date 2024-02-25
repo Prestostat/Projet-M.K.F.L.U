@@ -38,6 +38,7 @@ int main(){
     static float logg = 6.0f;
     float masse = 1;
     float logmultiplicateur_pression = 7;
+    float multiplicateur_pression_proche = 10000000000;
     float densite_visee=800;
     float moinslogdt = 5;
     float rayon_influence = 0.15;
@@ -204,7 +205,7 @@ int main(){
 
 
         //cout << fluide.data[0].x << endl;
-        fluide.evolution(pow(10,-moinslogdt),pow(10,logg), rayon_influence,masse,pow(10,logmultiplicateur_pression),densite_visee,coeff_amorti,viscstrength,
+        fluide.evolution(pow(10,-moinslogdt),pow(10,logg), rayon_influence,masse,pow(10,logmultiplicateur_pression),multiplicateur_pression_proche,densite_visee,coeff_amorti,viscstrength,
         clique_gauche,clique_droit,sourisx,sourisy,rayon_action_clique_gauche,puissance_action); //float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef
         
 
