@@ -6,7 +6,7 @@
 #define retrun return //permet d'écrir retrun a la place de return :sunglases:
 using namespace std;
 
-Ensemble::Ensemble(unsigned int nb,map<string,float> constantes){
+Ensemble::Ensemble(unsigned int nb,float rayon){
     nombre_de_particules=nb;
     data = new Particule[nb];
     unsigned int N; // nombre dont le carré est le 1er carré supérieur à nb
@@ -17,7 +17,7 @@ Ensemble::Ensemble(unsigned int nb,map<string,float> constantes){
     }
     for (unsigned int i=0;i<nb;i++){
         //data[i].initialise_particules(-1+1.0/N+(i%N)*2.0/N,-1+1.0/N+(i/N)*2.0/N,0,0,rayon);   //place les particles dans un carré remplissant l'espace de l'écran
-        data[i].initialise_particules(-0.5+0.5/N+(i%N)*1.0/N,-0.5+0.5/N+(i/N)*1.0/N,0,0,constantes["rayon_affichage"]); // CARRÉ
+        data[i].initialise_particules(-0.5+0.5/N+(i%N)*1.0/N,-0.5+0.5/N+(i/N)*1.0/N,0,0,rayon); // CARRÉ
         //data[i].random_initialise_particules(rayon); // RANDOM                                                                                     //(de (-1,-1) à (1,1) dépendant de leur nombre
     }
 }
@@ -41,19 +41,36 @@ Ensemble::Ensemble(const Ensemble& other) {
 
 void Ensemble::gravite() {
     for (unsigned int i=0; i<nombre_de_particules;i++) {
-        data[i].vy-=constantes["g"]*constantes["dt"];
+        data[i].vy-=g*dt;
     }
 }
 
 void Ensemble::deplacement() {
     for (unsigned int i=0; i<nombre_de_particules;i++) {
-        data[i].x+=data[i].vx*constantes["dt"];
-        data[i].y+=data[i].vy*constantes["dt"];
-        data[i].collision(constantes["coeff_amorti"]);
+        data[i].x+=data[i].vx*dt;
+        data[i].y+=data[i].vy*dt;
+        data[i].collision(coeff_amorti);
     }
 }
-void Ensemble::evolution(map<string,float> constantes_,map<string,bool> controles){
-    constantes=constantes_;
+void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float multiplicateur_pression_,float multiplicateur_pression_proche_,float densite_visee_,float dt_,float rayon_influence_,float coeff_amorti_,float viscstrength_,float sourisx_,float sourisy_,float rayon_action_clique_gauche_,float puissance_action_clique_gauche_,float clique_gauche_,float clique_droit_){
+    rayon_affichage = rayon_affichage_;
+    g = g_;
+    masse =masse_;
+    multiplicateur_pression = multiplicateur_pression_;
+    multiplicateur_pression_proche = multiplicateur_pression_proche_;
+    densite_visee = densite_visee_;
+    dt =dt_;
+    rayon_influence =rayon_influence_;
+    coeff_amorti = coeff_amorti_;
+    viscstrength = viscstrength_;
+    sourisx = sourisx_;
+    sourisy = sourisy_;
+    rayon_action_clique_gauche =rayon_action_clique_gauche_;
+    puissance_action_clique_gauche = puissance_action_clique_gauche_;
+
+    clique_gauche=clique_gauche_;
+    clique_droit=clique_droit_;
+
     for(unsigned int i=0; i<nombre_de_particules;i++){
         data[i].x_predit = data[i].x+data[i].vx*pow(10,-7);
         data[i].y_predit = data[i].y+data[i].vy*pow(10,-7);
@@ -69,13 +86,13 @@ void Ensemble::evolution(map<string,float> constantes_,map<string,bool> controle
     force_pression(d);
     force_pression_proche(d);
     visc(d);
-    force_souris(controles);
+    force_souris();
     deplacement();
     free(d);
 }
 float Ensemble::densite_ponctuelle(float ex,float ey){
     float d=0;
-    int* coord = coordonnee(ex,ey,constantes["rayon_influence"]);
+    int* coord = coordonnee(ex,ey,rayon_influence);
     int* coord_temporaire = (int*)malloc(2*sizeof(int));            
     int* liste_cellules = (int*)malloc(9*sizeof(int));
     for(int i=0;i<9;i++){
@@ -87,7 +104,7 @@ float Ensemble::densite_ponctuelle(float ex,float ey){
         int j=indice_debut[liste_cellules[i]];
         if (j>=0) {
             while(indices[j][1]==indices[indice_debut[liste_cellules[i]]][1]){
-                d+=constantes["masse"]*data[indices[j][0]].influence(ex,ey,constantes["rayon_influence"]);
+                d+=masse*data[indices[j][0]].influence(ex,ey,rayon_influence);
                 j++;
                 if ((unsigned int)j==nombre_de_particules){
                     break;
@@ -111,7 +128,7 @@ float* Ensemble::densite(){
 void Ensemble::pression_ponctuelle(unsigned int n,  float* densite,float* pression){
     pression[0]=0;
     pression[1]=0;
-    int* coord = coordonnee(data[n].x,data[n].y,constantes["rayon_influence"]);
+    int* coord = coordonnee(data[n].x,data[n].y,rayon_influence);
     int* coord_temporaire = (int*)malloc(2*sizeof(int));            
     int* liste_cellules = (int*)malloc(9*sizeof(int));
     for(int i=0;i<9;i++){
@@ -133,18 +150,18 @@ void Ensemble::pression_ponctuelle(unsigned int n,  float* densite,float* pressi
                         distance = sqrt(x*x+y*y); 
                         float dirx = x/distance;
                         float diry = y/distance;
-                        float grad_influence = data[m].grad_influence(data[m].x+x,data[m].y+y,constantes["rayon_influence"]);
+                        float grad_influence = data[m].grad_influence(data[m].x+x,data[m].y+y,rayon_influence);
                         float pression_mutuelle;
-                        pression_mutuelle = ((-densite[m]+constantes["densite_visee"])+(-densite[n]+constantes["densite_visee"]))/2.0*constantes["multiplicateur_pression"];
+                        pression_mutuelle = ((-densite[m]+densite_visee)+(-densite[n]+densite_visee))/2.0*multiplicateur_pression;
                         pression[0]+=(pression_mutuelle*grad_influence*dirx/densite[m]);
                         pression[1]+=(pression_mutuelle*grad_influence*diry/densite[m]);
                         }
                     else {
                         float dirx = (data[n].x-data[m].x_predit)/distance;
                         float diry = (data[n].y-data[m].y_predit)/distance;
-                        float grad_influence = data[m].grad_influence(data[n].x,data[n].y,constantes["rayon_influence"]);
+                        float grad_influence = data[m].grad_influence(data[n].x,data[n].y,rayon_influence);
                         float pression_mutuelle;
-                        pression_mutuelle = ((-densite[m]+constantes["densite_visee"])+(-densite[n]+constantes["densite_visee"]))/2.0*constantes["multiplicateur_pression"];
+                        pression_mutuelle = ((-densite[m]+densite_visee)+(-densite[n]+densite_visee))/2.0*multiplicateur_pression;
                         pression[0]+=(pression_mutuelle*grad_influence*dirx/densite[m]);
                         pression[1]+=(pression_mutuelle*grad_influence*diry/densite[m]);
                     }
@@ -164,8 +181,8 @@ void Ensemble::force_pression(float* d){
     float* pression = (float*)malloc(2*sizeof(float));
     for(unsigned int i=0; i<nombre_de_particules;i++){
         pression_ponctuelle(i,d,pression);
-        data[i].vx+=constantes["dt"]*pression[0]/d[i];
-        data[i].vy+=constantes["dt"]*pression[1]/d[i];
+        data[i].vx+=dt*pression[0]/d[i];
+        data[i].vy+=dt*pression[1]/d[i];
     }
     free(pression);
     
@@ -175,7 +192,7 @@ void Ensemble::force_pression(float* d){
 void Ensemble::visc_ponctuelle(unsigned int n,float* visc){
     visc[0]=0;
     visc[1]=0;
-    int* coord = coordonnee(data[n].x,data[n].y,constantes["rayon_influence"]);
+    int* coord = coordonnee(data[n].x,data[n].y,rayon_influence);
     int* coord_temporaire = (int*)malloc(2*sizeof(int));            
     int* liste_cellules = (int*)malloc(9*sizeof(int));
     for(int i=0;i<9;i++){
@@ -189,9 +206,9 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc){
             while(indices[j][1]==indices[indice_debut[liste_cellules[i]]][1]){
                 unsigned int m=indices[j][0];
                 if (m!=n) {
-                    float infl = data[i].influence(data[n].x,data[n].y,constantes["rayon_influence"]);
-                    visc[0] += (data[i].vx-data[n].vx)*infl*constantes["viscstrength"];
-                    visc[1] += (data[i].vy-data[n].vy)*infl*constantes["viscstrength"];
+                    float infl = data[i].influence(data[n].x,data[n].y,rayon_influence);
+                    visc[0] += (data[i].vx-data[n].vx)*infl*viscstrength;
+                    visc[1] += (data[i].vy-data[n].vy)*infl*viscstrength;
                     }
                 j++;
                 if ((unsigned int)j==nombre_de_particules){
@@ -207,8 +224,8 @@ void Ensemble::visc(float* d){
     float* viscosite = (float*)malloc(2*sizeof(float));
     for(unsigned int i=0; i<nombre_de_particules;i++){
         visc_ponctuelle(i,viscosite);
-        data[i].vx += constantes["dt"]*viscosite[0]/d[i];
-        data[i].vy += constantes["dt"]*viscosite[1]/d[i];
+        data[i].vx += dt*viscosite[0]/d[i];
+        data[i].vy += dt*viscosite[1]/d[i];
     }
     free(viscosite);
 }
@@ -219,7 +236,7 @@ int** Ensemble::liste_indice() {
     for (unsigned int i=0; i<nombre_de_particules;i++){
         liste[i] = (int*)malloc(2*sizeof(int));
         liste[i][0] = (int)i;
-        liste[i][1]= data[i].cle(constantes["rayon_influence"],nombre_de_particules);
+        liste[i][1]= data[i].cle(rayon_influence,nombre_de_particules);
     }
     return(liste);
 }
@@ -250,26 +267,25 @@ int* Ensemble::liste_indice_debut(int**liste){
     return(debut_indice);
 }
 
-void Ensemble::force_souris(map<string,bool> controles){
-    if (controles["clique_gauche"] && constantes["sourisx"]>0 && constantes["sourisy"]>0 && constantes["sourisx"]<960 && constantes["sourisy"]<960){
-        float x = 2*constantes["sourisx"]/960.0 -1;
-        float y = -constantes["sourisy"]*2/960.0 +1;
+void Ensemble::force_souris(){
+    if (clique_gauche && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
+        float x = 2*sourisx/960.0 -1;
+        float y = -sourisy*2/960.0 +1;
         for(unsigned int i=0;i<nombre_de_particules;i++){
             float dst = sqrt(pow((data[i].x-x),2)+pow((data[i].y)-y,2));
             if (dst==0){
                 dst+=1;
             }
-            if (dst<constantes["rayon_action_clique_gauche"]){  
-                float infl = fonction_influence(dst,constantes["rayon_action_clique_gauche"]);
-                data[i].vx*=0.9;
-                data[i].vy*=0.9;
-                data[i].vx+=constantes["dt"]*infl*constantes["puissance_action_clique_gauche"]*((data[i].x-x)/dst);
-                data[i].vy+=constantes["dt"]*infl*constantes["puissance_action_clique_gauche"]*((data[i].y-y)/dst);
+            if (dst<rayon_action_clique_gauche){  
+                float infl = fonction_influence(dst,rayon_action_clique_gauche);
+                data[i].vx+=dt*infl*puissance_action_clique_gauche*((data[i].x-x)/dst);
+                data[i].vy+=dt*infl*puissance_action_clique_gauche*((data[i].y-y)/dst);
+                
             }
             
         }
     }
-    if (controles["clique_droit"] && constantes["sourisx"]>0 && constantes["sourisy"]>0 && constantes["sourisx"]<960 && constantes["sourisy"]<960){
+    if (clique_droit && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
         for(unsigned int i=0;i<nombre_de_particules;i++){
             data[i].vx=0;
             data[i].vy=0;
@@ -282,7 +298,7 @@ void Ensemble::force_souris(map<string,bool> controles){
 void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* densite,float* pression){
     pression[0]=0;
     pression[1]=0;
-    int* coord = coordonnee(data[n].x,data[n].y,constantes["rayon_influence"]);
+    int* coord = coordonnee(data[n].x,data[n].y,rayon_influence);
     int* coord_temporaire = (int*)malloc(2*sizeof(int));            
     int* liste_cellules = (int*)malloc(9*sizeof(int));
     for(int i=0;i<9;i++){
@@ -304,18 +320,18 @@ void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* densite,float*
                         distance = sqrt(x*x+y*y); 
                         float dirx = x/distance;
                         float diry = y/distance;
-                        float grad_influence = data[m].grad_influence_proche(data[m].x+x,data[m].y+y,constantes["rayon_influence"]);
+                        float grad_influence = data[m].grad_influence_proche(data[m].x+x,data[m].y+y,rayon_influence);
                         float pression_mutuelle;
-                        pression_mutuelle = ((densite[m])+(densite[n]))/2.0*constantes["multiplicateur_pression_proche"];
+                        pression_mutuelle = ((densite[m])+(densite[n]))/2.0*multiplicateur_pression_proche;
                         pression[0]+=(pression_mutuelle*grad_influence*dirx/densite[m]);
                         pression[1]+=(pression_mutuelle*grad_influence*diry/densite[m]);
                         }
                     else {
                         float dirx = (data[n].x-data[m].x_predit)/distance;
                         float diry = (data[n].y-data[m].y_predit)/distance;
-                        float grad_influence = data[m].grad_influence_proche(data[n].x,data[n].y,constantes["rayon_influence"]);
+                        float grad_influence = data[m].grad_influence_proche(data[n].x,data[n].y,rayon_influence);
                         float pression_mutuelle;
-                        pression_mutuelle = ((densite[m])+(densite[n]))/2.0*constantes["multiplicateur_pression_proche"];
+                        pression_mutuelle = ((densite[m])+(densite[n]))/2.0*multiplicateur_pression_proche;
                         pression[0]+=-(pression_mutuelle*grad_influence*dirx/densite[m]);
                         pression[1]+=-(pression_mutuelle*grad_influence*diry/densite[m]);
                     }
@@ -335,8 +351,8 @@ void Ensemble::force_pression_proche(float* d){
     float* pression = (float*)malloc(2*sizeof(float));
     for(unsigned int i=0; i<nombre_de_particules;i++){
         pression_ponctuelle_proche(i,d,pression);
-        data[i].vx+=constantes["dt"]*pression[0]/d[i];
-        data[i].vy+=constantes["dt"]*pression[1]/d[i];
+        data[i].vx+=dt*pression[0]/d[i];
+        data[i].vy+=dt*pression[1]/d[i];
     }
     free(pression);
     

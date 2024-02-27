@@ -1,8 +1,7 @@
 #ifndef ENSEMBLE_H
 #define ENSEMBLE_H
 #include "particule.h"
-#include <map>
-#include <string>
+
 class Ensemble {
     private:
     public:
@@ -10,15 +9,31 @@ class Ensemble {
     Particule* data;
     int** indices;
     int* indice_debut;
-    std::map<std::string,float> constantes;
+    float rayon_affichage ;
+    float g ;
+    float masse = 1;
+    float multiplicateur_pression ;
+    float multiplicateur_pression_proche ;
+    float densite_visee ;
+    float dt ;
+    float rayon_influence ;
+    float coeff_amorti;
+    float viscstrength ;
+    float sourisx;
+    float sourisy;
+    float rayon_action_clique_gauche ;
+    float puissance_action_clique_gauche ;
 
-    Ensemble (unsigned int nb,std::map<std::string,float> constantes);
+    bool clique_gauche;
+    bool clique_droit;
+
+    Ensemble (unsigned int nb,float rayon_affichage);
     ~Ensemble();
     Ensemble (const Ensemble&);
 
     void gravite();
     void deplacement();
-    void evolution(std::map<std::string,float> constantes,std::map<std::string,bool> controles);
+    void evolution(float rayon_affichage,float g,float masse,float multiplicateur_pression,float multiplicateur_pression_proche,float densite_visee,float dt,float rayon_influence,float coeff_amorti,float viscstrength,float sourisx,float sourisy,float rayon_action_clique_gauche,float puissance_action_clique_gauche,float clique_gauche,float clique_droit);
     float densite_ponctuelle(float ex, float ey);
     float* densite();
     void pression_ponctuelle(unsigned int n, float* densite,float* pression);
@@ -28,7 +43,7 @@ class Ensemble {
     int** liste_indice();
     void tri_liste_indice( int** liste );
     int* liste_indice_debut(int**liste);
-    void force_souris(std::map<std::string,bool> controles);
+    void force_souris();
     void pression_ponctuelle_proche(unsigned int n,  float* densite,float* pression);
     void force_pression_proche(float* d);
 };

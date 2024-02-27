@@ -16,6 +16,7 @@
 #include <map>
 
 #define PI 3.14159265
+#define E 2.71828182846
 using namespace std;
 
 float maxi(float a,float b){
@@ -32,33 +33,65 @@ float mini(float a,float b){
 int main(){
     unsigned int nombre_de_points =3; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
-    unsigned int nombre_de_particules =5000;
+    unsigned int nombre_de_particules =2000;
     int affiche_densité =0;
     int resolution_densite = 100;
+    int sens_action_clique_gauche=1;
 
+    float rayon_affichage = 0.02;
+    float g = 10;
+    float masse = 1;
+    float multiplicateur_pression = 100;
+    float multiplicateur_pression_proche = 10000;
+    float densite_visee = 1000;
+    float dt =0.002;
+    float rayon_influence =0.1;
+    float coeff_amorti = 1;
+    float viscstrength = 10;
+    float sourisx = 0;
+    float sourisy = 0;
+    float rayon_action_clique_gauche =0.5;
+    float puissance_action_clique_gauche = 1;
+
+    bool clique_gauche=false;
+    bool clique_droit=false;
+
+
+    
+
+
+
+
+    /*
     map<string,float> constantes;
     constantes.insert({"rayon_affichage",0.005});
-    constantes.insert({"g",6});
+    constantes.insert({"g",1});
     constantes.insert({"masse",1});
-    constantes.insert({"multiplicateur_pression",7});
-    constantes.insert({"multiplicateur_pression_proche",7});
+    constantes.insert({"multiplicateur_pression",1});
+    constantes.insert({"multiplicateur_pression_proche",1});
     constantes.insert({"densite_visee",1000});
-    constantes.insert({"dt",5});
-    constantes.insert({"rayon_influence",0.1});
+    constantes.insert({"dt",0.01});
+    constantes.insert({"rayon_influence",0.01});
     constantes.insert({"coeff_amorti",1});
     constantes.insert({"viscstrength",10});
     constantes.insert({"sourisx",0});
     constantes.insert({"sourisy",0});
-    constantes.insert({"rayon_action-clique_gauche",0.5});
-    constantes.insert({"puissance-action_clique_gauche",7});
+    constantes.insert({"rayon_action-clique_gauche",0.3});
+    constantes.insert({"puissance_action_clique_gauche",1});
 
     map<string,bool> controles;
-    controles.insert({"clique_gauche",false});
+    controles.insert({"clique_gauche",true});
     controles.insert({"clique_droit",false});
-
+    
     Ensemble fluide = Ensemble(nombre_de_particules,constantes);
-
-
+*/
+    float logg = log(g);
+    float logmp =log(multiplicateur_pression);
+    float logmpp = log(multiplicateur_pression_proche);
+    float logdt = log(dt);
+    float logpacg = log(puissance_action_clique_gauche);
+    
+    Ensemble fluide = Ensemble(nombre_de_particules,rayon_affichage);
     
 
 
@@ -128,13 +161,23 @@ int main(){
         {
             ImGuiIO& io = ImGui::GetIO();
             ImGui::Text("méca flu :sunglassess: ");                           // Display some text (you can use a format string too)
-            ImGui::SliderFloat("rayon visuelle de la particule", &(constantes["rayon_affichage"]), 0.0f, 0.05f);
-            /*ImGui::SliderFloat("-log(dt)", &, 4.0f, 6.0f);
+            ImGui::SliderFloat("rayon visuelle de la particule", &(rayon_affichage), 0.0f, 0.05f);
+            ImGui::SliderFloat("ln(dt)", &logdt, -7.0, 0.0f);
+            dt=pow(E,logdt);
             ImGui::SliderFloat("rayon_influence", &rayon_influence, 0.0f, 1.0f);
-            ImGui::SliderFloat("log(gravité)", &logg, 0.0f, 10.0f);
-            ImGui::SliderFloat("log(mulplicateur de pression)", &logmultiplicateur_pression, 0.0f, 10.0f);
-            ImGui::SliderFloat("densité visée", &densite_visee, 100.0f, 2000.0f);
+            ImGui::SliderFloat("ln(gravité)", &logg, 0.0f, 10.0f);
+            g=pow(E,logg);
+            ImGui::SliderFloat("ln(mulplicateur de pression)", &logmp, 0.0f, 10.0f);
+            multiplicateur_pression=pow(E,logmp);
+            ImGui::SliderFloat("ln(mulplicateur de pression_proche)", &logmpp, 0.0f, 10.0f);
+            multiplicateur_pression_proche=pow(E,logmpp);
+            ImGui::SliderFloat("densité visée", &densite_visee, 0.0f, 5000.0f);
             ImGui::SliderFloat("Coef viscosité", &viscstrength, 0.0f, 100.0f);
+            ImGui::SliderFloat("ln(force_clique_gauche)", &logpacg, 0.0f, 10.0f);
+            puissance_action_clique_gauche=pow(E,logpacg)*sens_action_clique_gauche;
+
+            if (ImGui::Button("sens de la force du clique gauche"))
+                sens_action_clique_gauche*=-1;
             ImGui::SliderFloat("coeff d'amortissement", &coeff_amorti, 0.0f, 2.0f);   
             ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -150,7 +193,7 @@ int main(){
             clique_gauche=ImGui::IsMouseClicked(0,true);
             clique_droit=ImGui::IsMouseClicked(1,true);
             sourisx=io.MousePos.x;
-            sourisy=io.MousePos.y;*/
+            sourisy=io.MousePos.y;
         }
         affiche_densité = affiche_densité%2;
 
@@ -167,9 +210,9 @@ int main(){
                 position_carre[7]=-1.0+(i/resolution_densite+1)*pas;
 
                 float densité_grille= fluide.densite_ponctuelle(position_carre[0]+pas/2,position_carre[1]+pas/2);
-                float r=mini(1.0,maxi(0.0,densité_grille/constantes["densite_visee"] -1));
-                float g=mini(0.0,pow(mini(abs(densité_grille/constantes["densite_visee"]),abs(2-densité_grille/constantes["densite_visee"])),4));
-                float b=maxi(0.0,1-densité_grille/constantes["densite_visee"]);
+                float r=mini(1.0,maxi(0.0,densité_grille/densite_visee -1));
+                float g=mini(0.0,pow(mini(abs(densité_grille/densite_visee),abs(2-densité_grille/densite_visee)),4));
+                float b=maxi(0.0,1-densité_grille/densite_visee);
 
                 shader.Bind();
                 shader.SetUniform4f("u_color",r,g,b,1.0f);            
@@ -188,7 +231,7 @@ int main(){
         
 
         for (unsigned int i=0;i<nombre_de_particules;i++){
-            fluide.data[i].rayon = constantes["rayon_affichage"];
+            fluide.data[i].rayon = rayon_affichage;
             fluide.data[i].position_particule(nombre_de_points,position );
             
 
@@ -204,15 +247,8 @@ int main(){
         }
 
         
-
-
-
-
-
-
-        //cout << fluide.data[0].x << endl;
-        //fluide.evolution(pow(10,-const),pow(10,logg), rayon_influence,masse,pow(10,logmultiplicateur_pression),multiplicateur_pression_proche,densite_visee,coeff_amorti,viscstrength,clique_gauche,clique_droit,sourisx,sourisy,rayon_action_clique_gauche,puissance_action); //float dt, float g,float rayon_influence, float m,float multipression,float dvisee,float coef
-        fluide.evolution(constantes,controles);
+        
+        fluide.evolution(rayon_affichage,g,masse,multiplicateur_pression,multiplicateur_pression_proche,densite_visee,dt,rayon_influence,coeff_amorti,viscstrength,sourisx,sourisy,rayon_action_clique_gauche,puissance_action_clique_gauche,clique_gauche,clique_droit);
 
 
         ImGui::Render();
