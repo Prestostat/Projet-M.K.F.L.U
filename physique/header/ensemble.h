@@ -34,7 +34,6 @@ class Ensemble {
     void gravite();
     void deplacement();
     void evolution(float rayon_affichage,float g,float masse,float multiplicateur_pression,float multiplicateur_pression_proche,float densite_visee,float dt,float rayon_influence,float coeff_amorti,float viscstrength,float sourisx,float sourisy,float rayon_action_clique_gauche,float puissance_action_clique_gauche,float clique_gauche,float clique_droit);
-    float densite_ponctuelle(float ex, float ey);
     float* densite();
     void pression_ponctuelle(unsigned int n, float* densite,float* pression);
     void force_pression(float* d);
@@ -46,6 +45,13 @@ class Ensemble {
     void force_souris();
     void pression_ponctuelle_proche(unsigned int n,  float* densite,float* pression);
     void force_pression_proche(float* d);
+    float densite_ponctuelle_visee(float ex, float ey);
+   
 };
+
+
+float aire(float rayon, float distance);
+float aire_triangle(float base, float hauteur);
+float maxi(float a,float b);
 int compare(const void* a,const void* b);
 #endif

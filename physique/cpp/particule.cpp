@@ -3,6 +3,8 @@
 #include <iostream>
 #define PI 3.14159265
 using namespace std;
+
+
 void Particule::initialise_particules(float xini, float yini,float vxini,float vyini,float rayonini){
     x=xini;
     y=yini;
@@ -10,9 +12,13 @@ void Particule::initialise_particules(float xini, float yini,float vxini,float v
     vy=vyini;
     rayon=rayonini;
 }
+
+
 void Particule::inirapide(){
     initialise_particules(0,0,0,0,0.1);
 }
+
+
 void Particule::random_initialise_particules(float rayonini){
     float d=2.0/RAND_MAX;
     float a =std::rand()*d-1;
@@ -24,8 +30,8 @@ void Particule::random_initialise_particules(float rayonini){
     vx=std::rand()*d*10-10;
     vy=std::rand()*d*10-10;
     rayon=rayonini;
-    
 }
+
 
 void Particule::position_particule(unsigned int nb_points,float* position){
     for (unsigned int i=0; i<nb_points;i++){
@@ -34,17 +40,22 @@ void Particule::position_particule(unsigned int nb_points,float* position){
         //cout << position [2*i] << " " <<position[2*i+1] << endl;
     }
 }
+
+
 void Particule::collision(float amorti){
     if (x+rayon >1){x=1-rayon-amorti*(x+rayon-1);vx*=-1*amorti;}
     if (x-rayon <-1){x=-1+rayon+amorti*(-x+rayon-1);vx*=-1*amorti;}
     if (y+rayon >1){y=1-rayon-amorti*(y+rayon-1);vy*=-1*amorti;}
     if (y-rayon <-1){y=-1+rayon+amorti*(-y+rayon-1);vy*=-1*amorti;}
 }
+
+
 float fonction_influence(float x,float rayon_influence){
     float volume = PI*pow(rayon_influence,4)/6; //normalisation pour que l'intégrale du volume de l'influence soit 1, a essayer en exponentielle décroissante ?
     return(pow((rayon_influence-x),2)/volume);
-
 }
+
+
 float Particule::influence(float ex,float ey,float rayon_influence){
     float distance = sqrt((x-ex)*(x-ex)+(y-ey)*(y-ey));
     if (distance>rayon_influence){
@@ -52,16 +63,17 @@ float Particule::influence(float ex,float ey,float rayon_influence){
     }
     else {
         return (fonction_influence(distance, rayon_influence));
-
     }
-
-
 }
- float derive_fonction_influence(float x, float rayon_influence){
+
+
+float derive_fonction_influence(float x, float rayon_influence){
     float volume = PI*pow(rayon_influence,4)/6;
     return(2*(x-rayon_influence)/volume);
- }
- float Particule::grad_influence(float ex,float ey,float rayon_influence){
+}
+
+
+float Particule::grad_influence(float ex,float ey,float rayon_influence){
     float distance = sqrt((x-ex)*(x-ex)+(y-ey)*(y-ey));
     if (distance>rayon_influence){
         return(0);
@@ -69,8 +81,10 @@ float Particule::influence(float ex,float ey,float rayon_influence){
     else {
         return (derive_fonction_influence(distance, rayon_influence));
     }
- }
- float Particule::grad_influence_proche(float ex,float ey,float rayon_influence){
+}
+
+
+float Particule::grad_influence_proche(float ex,float ey,float rayon_influence){
     float distance = sqrt((x-ex)*(x-ex)+(y-ey)*(y-ey));
     if (distance>rayon_influence){
         return(0);
@@ -78,23 +92,30 @@ float Particule::influence(float ex,float ey,float rayon_influence){
     else {
         return (derive_fonction_influence_proche(distance, rayon_influence));
     }
- }
- float derive_fonction_influence_proche(float x, float rayon_influence){
+}
+
+
+float derive_fonction_influence_proche(float x, float rayon_influence){
     float volume = 2*PI*pow(rayon_influence,5)/5;
     return(4*pow((x-rayon_influence),5)/volume);
- }
+}
+
+
 int* Particule::coordonnee(float rayon_influence){
     int* coord = (int*)malloc(2*sizeof(int));
     coord[0]=(int)(x/rayon_influence);
     coord[1]=(int)(y/rayon_influence);
     return(coord);
 }
+
+
 int* coordonnee(float ex,float ey,float rayon_influence){
     int* coord = (int*)malloc(2*sizeof(int));
     coord[0]=(int)(ex/rayon_influence);
     coord[1]=(int)(ey/rayon_influence);
     return(coord);
 }
+
 
 int Particule::cle(float rayon_influence, int nombre_de_particules){
     int a = 15823;
@@ -104,7 +125,9 @@ int Particule::cle(float rayon_influence, int nombre_de_particules){
     temp+= nombre_de_particules;
     temp = temp%nombre_de_particules;
     return(temp);
-}  
+}
+
+
 int cle(int* coord, int nombre_de_particules){
     int a = 15823;
     int b =9737333;

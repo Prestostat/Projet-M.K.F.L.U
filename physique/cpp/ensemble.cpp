@@ -21,6 +21,8 @@ Ensemble::Ensemble(unsigned int nb,float rayon){
         //data[i].random_initialise_particules(rayon); // RANDOM                                                                                     //(de (-1,-1) à (1,1) dépendant de leur nombre
     }
 }
+
+
 Ensemble::~Ensemble(){
     if (data!= nullptr) {delete[] data;}
     if (indice_debut != nullptr) {delete[] indice_debut;}
@@ -31,6 +33,8 @@ Ensemble::~Ensemble(){
         delete[] indices;
     }
 } // a modifier pour delete tous les tableaux
+
+
 Ensemble::Ensemble(const Ensemble& other) {
     data=new Particule[other.nombre_de_particules];
     for(unsigned int i=0;i<other.nombre_de_particules;i++){
@@ -39,11 +43,13 @@ Ensemble::Ensemble(const Ensemble& other) {
 
 }
 
+
 void Ensemble::gravite() {
     for (unsigned int i=0; i<nombre_de_particules;i++) {
         data[i].vy-=g*dt;
     }
 }
+
 
 void Ensemble::deplacement() {
     for (unsigned int i=0; i<nombre_de_particules;i++) {
@@ -52,6 +58,8 @@ void Ensemble::deplacement() {
         data[i].collision(coeff_amorti);
     }
 }
+
+
 void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float multiplicateur_pression_,float multiplicateur_pression_proche_,float densite_visee_,float dt_,float rayon_influence_,float coeff_amorti_,float viscstrength_,float sourisx_,float sourisy_,float rayon_action_clique_gauche_,float puissance_action_clique_gauche_,float clique_gauche_,float clique_droit_){
     rayon_affichage = rayon_affichage_;
     g = g_;
@@ -90,7 +98,9 @@ void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float mult
     deplacement();
     free(d);
 }
-float Ensemble::densite_ponctuelle(float ex,float ey){
+
+
+  float Ensemble::densite_ponctuelle_visee(float ex, float ey){
     float d=0;
     int* coord = coordonnee(ex,ey,rayon_influence);
     int* coord_temporaire = (int*)malloc(2*sizeof(int));            
@@ -100,10 +110,66 @@ float Ensemble::densite_ponctuelle(float ex,float ey){
         coord_temporaire[1]=coord[1]-1+i/3;
         liste_cellules[i] = cle(coord_temporaire,nombre_de_particules);
     }
+
+    float a = 0; //valeur de l'aire qui est en dehors de la boîte
+
+    if ((ex-rayon_influence)<-1){
+        float diff = 1+ex;
+        a = aire(rayon_influence, diff);
+        }
+    if ((ex+rayon_influence)>1){
+        float diff = 1-ex;
+        a = aire(rayon_influence, diff);
+        }
+    if ((ey-rayon_influence)<-1){
+        float diff = 1+ey;
+        a = aire(rayon_influence, diff);
+        }
+    if ((ey+rayon_influence)>1){
+        float diff = 1-ey;
+        a = aire(rayon_influence, diff);
+        }
+    if(((ex-rayon_influence)<-1) && ((ey-rayon_influence)<-1)){
+        float diff_x = 1+ex;
+        float diff_y = 1+ey;
+        a= aire(rayon_influence, diff_x);
+        a+= aire(rayon_influence, diff_y);
+        float y_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_x*diff_x) - diff_y, 0);
+        float x_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_y*diff_y) - diff_x, 0);
+        a -= (aire_triangle(y_1, x_1) + pow((x_1+y_1)/2, 2)*(M_PI/4 - 0.5));
+    }
+    if(((ex-rayon_influence)<-1) && ((ey+rayon_influence)>1)){
+        float diff_x = 1+ex;
+        float diff_y = 1-ey;
+        a= aire(rayon_influence, diff_x);
+        a+= aire(rayon_influence, diff_y);
+        float y_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_x*diff_x) - diff_y, 0);
+        float x_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_y*diff_y) - diff_x, 0);
+        a -= (aire_triangle(y_1, x_1) + pow((x_1+y_1)/2, 2)*(M_PI/4 - 0.5));
+    }
+    if(((ex+rayon_influence)>1) && ((ey-rayon_influence)<-1)){
+        float diff_x = 1-ex;
+        float diff_y = 1+ey;
+        a= aire(rayon_influence, diff_x);
+        a+= aire(rayon_influence, diff_y);
+        float y_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_x*diff_x) - diff_y, 0);
+        float x_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_y*diff_y) - diff_x, 0);
+        a -= (aire_triangle(y_1, x_1) + pow((x_1+y_1)/2, 2)*(M_PI/4 - 0.5));
+    }
+    if(((ex+rayon_influence)>1) && ((ey+rayon_influence)>1)){
+        float diff_x = 1-ex;
+        float diff_y = 1-ey;
+        a= aire(rayon_influence, diff_x);
+        a+= aire(rayon_influence, diff_y);
+        float y_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_x*diff_x) - diff_y, 0);
+        float x_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_y*diff_y) - diff_x, 0);
+        a -= (aire_triangle(y_1, x_1) + pow((x_1+y_1)/2, 2)*(M_PI/4 - 0.5));
+    }
     for(unsigned int i=0;i<9;i++){
         int j=indice_debut[liste_cellules[i]];
         if (j>=0) {
             while(indices[j][1]==indices[indice_debut[liste_cellules[i]]][1]){
+                
                 d+=masse*data[indices[j][0]].influence(ex,ey,rayon_influence);
                 j++;
                 if ((unsigned int)j==nombre_de_particules){
@@ -112,19 +178,42 @@ float Ensemble::densite_ponctuelle(float ex,float ey){
             }
         }
     }
+    
+    d+= a*densite_visee/(M_PI*rayon_influence*rayon_influence); //metttre cette ligne en commentaire pour avoir la version précédente de la fonction
 
     free(coord);free(coord_temporaire);free(liste_cellules);
     return(d);
 }
 
+
+float maxi(float a,float b){
+    if(a<b){return(b);}
+    else{return(a);}
+}
+
+
+float aire(float rayon, float distance){
+    float res = pow(rayon, 2)*(acos(distance/rayon)-(distance/rayon)*sqrt(1-pow(distance/rayon, 2)));
+    return res;
+}
+
+
+float aire_triangle(float base, float hauteur){
+    float res = base*hauteur/2;
+    return res;
+}
+
+
 float* Ensemble::densite(){
     float* dens=(float*)malloc(nombre_de_particules*sizeof(float));
     for(unsigned int i=0;i<nombre_de_particules;i++){
-        dens[i]=densite_ponctuelle(data[i].x_predit,data[i].y_predit);
+        dens[i]=densite_ponctuelle_visee(data[i].x_predit,data[i].y_predit);
         
     }
     return(dens);
 }
+
+
 void Ensemble::pression_ponctuelle(unsigned int n,  float* densite,float* pression){
     pression[0]=0;
     pression[1]=0;
@@ -177,6 +266,7 @@ void Ensemble::pression_ponctuelle(unsigned int n,  float* densite,float* pressi
     free(coord);free(coord_temporaire);free(liste_cellules);
 }
 
+
 void Ensemble::force_pression(float* d){
     float* pression = (float*)malloc(2*sizeof(float));
     for(unsigned int i=0; i<nombre_de_particules;i++){
@@ -188,6 +278,7 @@ void Ensemble::force_pression(float* d){
     
 
 }
+
 
 void Ensemble::visc_ponctuelle(unsigned int n,float* visc){
     visc[0]=0;
@@ -218,8 +309,9 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc){
         }
     }
     free(coord);free(coord_temporaire);free(liste_cellules);
-    
 }
+
+
 void Ensemble::visc(float* d){
     float* viscosite = (float*)malloc(2*sizeof(float));
     for(unsigned int i=0; i<nombre_de_particules;i++){
@@ -241,17 +333,20 @@ int** Ensemble::liste_indice() {
     return(liste);
 }
 
-int compare(const void* a,const void* b)
-{
+
+int compare(const void* a,const void* b){
     if( (*(int**)a)[1] < (*(int**)b)[1]  ) {return(-1);}
     if( (*(int**)a)[1] == (*(int**)b)[1]  ) {return(0);}
     if( (*(int**)a)[1] > (*(int**)b)[1]  ) {return(1);}
     return(0);
 }
 
+
 void Ensemble::tri_liste_indice( int** liste ){
     qsort(liste,nombre_de_particules,sizeof(int*),compare);
 }
+
+
 int* Ensemble::liste_indice_debut(int**liste){
     int* debut_indice = (int*)malloc(nombre_de_particules*sizeof(int));
     for (unsigned int i=0;i<nombre_de_particules;i++){debut_indice[i]=-1;}
@@ -259,13 +354,12 @@ int* Ensemble::liste_indice_debut(int**liste){
     for(unsigned int i=0;i<nombre_de_particules;i++){
         if (temp != liste[i][1]) {
             temp = liste[i][1];
-            debut_indice[temp]=i;
-            
+            debut_indice[temp]=i;      
         }
-        
     }
     return(debut_indice);
 }
+
 
 void Ensemble::force_souris(){
     if (clique_gauche && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
@@ -280,20 +374,17 @@ void Ensemble::force_souris(){
                 float infl = fonction_influence(dst,rayon_action_clique_gauche);
                 data[i].vx+=dt*infl*puissance_action_clique_gauche*((data[i].x-x)/dst);
                 data[i].vy+=dt*infl*puissance_action_clique_gauche*((data[i].y-y)/dst);
-                
             }
-            
         }
     }
     if (clique_droit && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
         for(unsigned int i=0;i<nombre_de_particules;i++){
             data[i].vx=0;
             data[i].vy=0;
-        }
-            
-        
+        }    
     }
 }
+
 
 void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* densite,float* pression){
     pression[0]=0;
@@ -347,6 +438,7 @@ void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* densite,float*
     free(coord);free(coord_temporaire);free(liste_cellules);
 }
 
+
 void Ensemble::force_pression_proche(float* d){
     float* pression = (float*)malloc(2*sizeof(float));
     for(unsigned int i=0; i<nombre_de_particules;i++){
@@ -355,6 +447,4 @@ void Ensemble::force_pression_proche(float* d){
         data[i].vy+=dt*pression[1]/d[i];
     }
     free(pression);
-    
-
 }
