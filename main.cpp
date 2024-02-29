@@ -60,31 +60,6 @@ int main(){
     
 
 
-
-
-    /*
-    map<string,float> constantes;
-    constantes.insert({"rayon_affichage",0.005});
-    constantes.insert({"g",1});
-    constantes.insert({"masse",1});
-    constantes.insert({"multiplicateur_pression",1});
-    constantes.insert({"multiplicateur_pression_proche",1});
-    constantes.insert({"densite_visee",1000});
-    constantes.insert({"dt",0.01});
-    constantes.insert({"rayon_influence",0.01});
-    constantes.insert({"coeff_amorti",1});
-    constantes.insert({"viscstrength",10});
-    constantes.insert({"sourisx",0});
-    constantes.insert({"sourisy",0});
-    constantes.insert({"rayon_action-clique_gauche",0.3});
-    constantes.insert({"puissance_action_clique_gauche",1});
-
-    map<string,bool> controles;
-    controles.insert({"clique_gauche",true});
-    controles.insert({"clique_droit",false});
-    
-    Ensemble fluide = Ensemble(nombre_de_particules,constantes);
-*/
     float logg = log(g);
     float logmp =log(multiplicateur_pression);
     float logmpp = log(multiplicateur_pression_proche);
@@ -242,6 +217,13 @@ int main(){
             VertexBufferLayout layout;
             layout.Push<float>(2);
             va.AddBuffer(vb,layout);
+            float data[] = {rayon_affichage,rayon_influence,fluide.data[i].x,fluide.data[i].y};
+            VertexBuffer info(data,4*sizeof(float));
+            VertexBufferLayout layout2;
+            va.AddBuffer(info,layout2);
+        
+            
+            //GLCall(glBufferData(GL_ARRAY_BUFFER,sizeof(float)*4, data,GL_DYNAMIC_DRAW));
             IndexBuffer ib(indices,3*nombre_de_triangles);
             renderer.Draw(va,ib,shader);
         }

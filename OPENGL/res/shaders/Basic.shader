@@ -2,10 +2,12 @@
     #version 330 core
     
     layout(location = 0) in vec4 position;
-    
+    layout(location = 1) in vec4 informations;
+    out vec4 info;
     void main()
     {
-       gl_Position =position; 
+      info=informations;
+      gl_Position =position; 
     };
 
 
@@ -15,6 +17,7 @@
     
    layout(location = 0) out vec4 color;
    uniform vec4 u_color;
+   in vec4 info;
 
    
 
