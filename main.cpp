@@ -18,7 +18,7 @@
 #define PI 3.14159265
 #define E 2.71828182846
 using namespace std;
-
+//bonjour je suis un test
 float mini(float a,float b){
     if(a>b){return(b);}
     else{return(a);}
