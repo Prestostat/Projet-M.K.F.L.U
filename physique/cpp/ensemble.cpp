@@ -424,6 +424,26 @@ void Ensemble::force_souris(){
             data[i].vy=0;
         }    
     }
+    if(z_key){
+        for(unsigned int i=0;i<nombre_de_particules;i++){
+            data[i].vy+=dt*10;
+        }
+    }
+    if(d_key){
+        for(unsigned int i=0;i<nombre_de_particules;i++){
+            data[i].vx+=dt*10;
+        }
+    }
+    if(q_key){
+        for(unsigned int i=0;i<nombre_de_particules;i++){
+            data[i].vx-=dt*10;
+        }
+    }
+    if(s_key){
+        for(unsigned int i=0;i<nombre_de_particules;i++){
+            data[i].vy-=dt*10;
+        }
+    }
 }
 
 

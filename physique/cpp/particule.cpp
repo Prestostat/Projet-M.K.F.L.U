@@ -139,16 +139,16 @@ int cle(int* coord, int nombre_de_particules){
     return(temp);
 }  
 float* Particule::couleur(float vc){
-    cout<<v<< " vc " << vc << endl;
+    float v=sqrt(vx*vx+vy*vy);
     float* couleur=(float*)malloc(3*sizeof(float));
     couleur[1]=0;
     if (v<vc) {
-        couleur[0]=v/vc;
+        couleur[0]=(v/vc)*(v/vc);
         couleur[2]=1;
     }
-    else if (v<2*vc){
+    else if (v/vc<2.0){
         couleur[0]=1;
-        couleur[2]=1-v/vc;
+        couleur[2]=1-(v/vc-1)*(v/vc-1);
     }
     else {
         couleur[0]=1;
