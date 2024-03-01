@@ -10,9 +10,10 @@ main.o: main.cpp ///usr/include/GL/glew.h OPENGL/header/Renderer.h \
  OPENGL/src/vendor/imgui/imgui.h OPENGL/src/vendor/imgui/imconfig.h \
  OPENGL/src/vendor/imgui/imgui_impl_glfw_gl3.h
 ensemble.o: physique/cpp/ensemble.cpp physique/cpp/../header/ensemble.h \
- physique/cpp/../header/particule.h physique/cpp/../header/particule.h
-particule.o: physique/cpp/particule.cpp \
+ physique/cpp/../header/particule.h ///usr/include/GL/glew.h \
  physique/cpp/../header/particule.h
+particule.o: physique/cpp/particule.cpp \
+ physique/cpp/../header/particule.h ///usr/include/GL/glew.h
 IndexBuffer.o: OPENGL/cpp/IndexBuffer.cpp \
  OPENGL/cpp/../header/IndexBuffer.h OPENGL/cpp/../header/Renderer.h \
  ///usr/include/GL/glew.h OPENGL/cpp/../header/../header/IndexBuffer.h \

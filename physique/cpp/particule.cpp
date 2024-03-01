@@ -1,6 +1,8 @@
 #include "../header/particule.h"
 #include <math.h>
 #include <iostream>
+#include "///usr/include/GL/glew.h"
+#include <GLFW/glfw3.h>
 #define PI 3.14159265
 using namespace std;
 
@@ -136,3 +138,21 @@ int cle(int* coord, int nombre_de_particules){
     temp = temp%nombre_de_particules;
     return(temp);
 }  
+float* Particule::couleur(float vc){
+    cout<<v<< " vc " << vc << endl;
+    float* couleur=(float*)malloc(3*sizeof(float));
+    couleur[1]=0;
+    if (v<vc) {
+        couleur[0]=v/vc;
+        couleur[2]=1;
+    }
+    else if (v<2*vc){
+        couleur[0]=1;
+        couleur[2]=1-v/vc;
+    }
+    else {
+        couleur[0]=1;
+        couleur[2]=0;
+    }
+    return(couleur);
+}

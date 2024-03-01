@@ -1,6 +1,7 @@
 #ifndef PARTICULE_H
 #define PARTICULE_H
-
+#include "///usr/include/GL/glew.h"
+#include <GLFW/glfw3.h>
 class Particule {
     private:
     public:
@@ -22,6 +23,7 @@ class Particule {
     float grad_influence_proche(float ex, float ey, float rayon_influence);
     int* coordonnee(float rayon_influence);
     int cle(float rayon_influence, int nombre_de_particules);
+    float* couleur(float vitesse_caracteristique);
 
 };
 float fonction_influence(float x,float rayon_influence);

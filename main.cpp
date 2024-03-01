@@ -30,8 +30,8 @@ float mini(float a,float b){
 int main(){
     unsigned int nombre_de_points =3; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
-    unsigned int nombre_de_particules =2000;
-    int affiche_densité =0;
+    unsigned int nombre_de_particules =1000;
+    bool affiche_densité =false;
     int resolution_densite = 100;
     int sens_action_clique_gauche=1;
 
@@ -50,6 +50,7 @@ int main(){
     float rayon_action_clique_gauche =0.5;
     float puissance_action_clique_gauche = 1;
     float transparence = 10;
+    float vitesse_caracteristique =1;
 
     bool clique_gauche=false;
     bool clique_droit=false;
@@ -65,42 +66,16 @@ int main(){
 
     
 
-
-
-
-    /*
-    map<string,float> constantes;
-    constantes.insert({"rayon_affichage",0.005});
-    constantes.insert({"g",1});
-    constantes.insert({"masse",1});
-    constantes.insert({"multiplicateur_pression",1});
-    constantes.insert({"multiplicateur_pression_proche",1});
-    constantes.insert({"densite_visee",1000});
-    constantes.insert({"dt",0.01});
-    constantes.insert({"rayon_influence",0.01});
-    constantes.insert({"coeff_amorti",1});
-    constantes.insert({"viscstrength",10});
-    constantes.insert({"sourisx",0});
-    constantes.insert({"sourisy",0});
-    constantes.insert({"rayon_action-clique_gauche",0.3});
-    constantes.insert({"puissance_action_clique_gauche",1});
-
-    map<string,bool> controles;
-    controles.insert({"clique_gauche",true});
-    controles.insert({"clique_droit",false});
-    
-    Ensemble fluide = Ensemble(nombre_de_particules,constantes);
-*/
     float logg = log(g);
     float logmp =log(multiplicateur_pression);
     float logmpp = log(multiplicateur_pression_proche);
     float logdt = log(dt);
     float logpacg = log(puissance_action_clique_gauche);
-    
+    float logvc = log(vitesse_caracteristique);
     Ensemble fluide = Ensemble(nombre_de_particules,rayon_affichage);
     
 
-
+    
 
 
     GLFWwindow* window;
@@ -157,7 +132,10 @@ int main(){
     ImGui_ImplGlfwGL3_Init(window, true);
     ImGui::StyleColorsDark();
     bool show_demo_window = true;
-    float clear_color[3] = {1.0f,0.0f,0.0f};
+    float* clear_color = (float*)malloc(3*sizeof(float));
+    clear_color[0]=1;
+    clear_color[1]=0;
+    clear_color[2]=0;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -184,6 +162,8 @@ int main(){
             puissance_action_clique_gauche=pow(E,logpacg)*sens_action_clique_gauche;
             ImGui::SliderFloat("coeff d'amortissement", &coeff_amorti, 0.0f, 2.0f);  
             ImGui::SliderFloat("transparence", &transparence, 0.0f, 1000.0f);  
+            ImGui::SliderFloat("ln(vitesse_caracteristique)", &logvc, -5.0f, 5.0f);
+            vitesse_caracteristique=pow(E,logvc);
             if (ImGui::Button("sens de la force du clique gauche"))
                 sens_action_clique_gauche*=-1;
             if (ImGui::Button("activer le flou")){
@@ -194,7 +174,7 @@ int main(){
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
 
             if (ImGui::Button("affiche densité"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-                affiche_densité++;
+                affiche_densité = ! affiche_densité;
             ImGui::SameLine();
             ImGui::Text("addiche densité = %d", affiche_densité);
 
@@ -207,7 +187,7 @@ int main(){
             clique_gauche=ImGui::IsMouseClicked(0,true);
             clique_droit=ImGui::IsMouseClicked(1,true);
             a_key=io.KeysDown['Q']; // attention, c'est en Qwerty 
-            z_key=io.KeysDown['W'];
+            z_key=io.KeysDown['W']; 
             e_key=io.KeysDown['E'];
             q_key=io.KeysDown['A'];
             s_key=io.KeysDown['S'];
@@ -219,7 +199,7 @@ int main(){
         }
         affiche_densité = affiche_densité%2;
 
-        if (affiche_densité==1){
+        if (affiche_densité){
             float pas =2.0/resolution_densite;
             for (unsigned int i=0;i<resolution_densite*resolution_densite;i++){
                 position_carre[0]=-1.0+i%resolution_densite*pas;
@@ -261,7 +241,7 @@ int main(){
                 fluide.data[i].position_particule(nombre_de_points,rayon_affichage,position );
             }
             
-            
+            clear_color=fluide.data[i].couleur(vitesse_caracteristique);
 
             shader.Bind();
             if (flou){
