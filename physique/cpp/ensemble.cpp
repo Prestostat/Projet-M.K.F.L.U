@@ -60,7 +60,7 @@ void Ensemble::deplacement() {
 }
 
 
-void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float multiplicateur_pression_,float multiplicateur_pression_proche_,float densite_visee_,float dt_,float rayon_influence_,float coeff_amorti_,float viscstrength_,float sourisx_,float sourisy_,float rayon_action_clique_gauche_,float puissance_action_clique_gauche_,float clique_gauche_,float clique_droit_){
+void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float multiplicateur_pression_,float multiplicateur_pression_proche_,float densite_visee_,float dt_,float rayon_influence_,float coeff_amorti_,float viscstrength_,float sourisx_,float sourisy_,float rayon_action_clique_gauche_,float puissance_action_clique_gauche_,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool pause){
     rayon_affichage = rayon_affichage_;
     g = g_;
     masse =masse_;
@@ -79,24 +79,27 @@ void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float mult
     clique_gauche=clique_gauche_;
     clique_droit=clique_droit_;
 
-    for(unsigned int i=0; i<nombre_de_particules;i++){
-        data[i].x_predit = data[i].x+data[i].vx*pow(10,-7);
-        data[i].y_predit = data[i].y+data[i].vy*pow(10,-7);
-        data[i].vx*=0.995;
-        data[i].vy*=0.995;
+    
+    if (! pause){
+        for(unsigned int i=0; i<nombre_de_particules;i++){
+            data[i].x_predit = data[i].x+data[i].vx*pow(10,-7);
+            data[i].y_predit = data[i].y+data[i].vy*pow(10,-7);
+            data[i].vx*=0.995;
+            data[i].vy*=0.995;
+        }
+        gravite();
+        indices = liste_indice ();
+        tri_liste_indice(indices);
+        indice_debut = liste_indice_debut(indices);
+        float* de = densite();
+        force_pression(de);
+        force_pression_proche(de);
+        visc(de);
+        force_souris();
+        deplacement();
+        free(de);
     }
-
-    gravite();
-    indices = liste_indice ();
-    tri_liste_indice(indices);
-    indice_debut = liste_indice_debut(indices);
-    float* d = densite();
-    force_pression(d);
-    force_pression_proche(d);
-    visc(d);
-    force_souris();
-    deplacement();
-    free(d);
+    
 }
 
 

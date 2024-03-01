@@ -33,10 +33,10 @@ void Particule::random_initialise_particules(float rayonini){
 }
 
 
-void Particule::position_particule(unsigned int nb_points,float* position){
+void Particule::position_particule(unsigned int nb_points,float rayon_influence,float* position){
     for (unsigned int i=0; i<nb_points;i++){
-        position[2*i]   =   x + rayon*cos(2*PI*i/nb_points);
-        position[2*i+1] =   y + rayon*sin(2*PI*i/nb_points);
+        position[2*i]   =   x + 2*rayon_influence*cos(2*PI*i/nb_points);
+        position[2*i+1] =   y + 2*rayon_influence*sin(2*PI*i/nb_points);
         //cout << position [2*i] << " " <<position[2*i+1] << endl;
     }
 }

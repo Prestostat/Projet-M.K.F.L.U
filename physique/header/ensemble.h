@@ -26,6 +26,14 @@ class Ensemble {
 
     bool clique_gauche;
     bool clique_droit;
+    bool a_key;
+    bool z_key;
+    bool e_key;
+    bool q_key;
+    bool s_key;
+    bool d_key;
+    bool pause;
+
 
     Ensemble (unsigned int nb,float rayon_affichage);
     ~Ensemble();
@@ -33,7 +41,7 @@ class Ensemble {
 
     void gravite();
     void deplacement();
-    void evolution(float rayon_affichage,float g,float masse,float multiplicateur_pression,float multiplicateur_pression_proche,float densite_visee,float dt,float rayon_influence,float coeff_amorti,float viscstrength,float sourisx,float sourisy,float rayon_action_clique_gauche,float puissance_action_clique_gauche,float clique_gauche,float clique_droit);
+    void evolution(float rayon_affichage,float g,float masse,float multiplicateur_pression,float multiplicateur_pression_proche,float densite_visee,float dt,float rayon_influence,float coeff_amorti,float viscstrength,float sourisx,float sourisy,float rayon_action_clique_gauche,float puissance_action_clique_gauche,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool espace);
     float* densite();
     void pression_ponctuelle(unsigned int n, float* densite,float* pression);
     void force_pression(float* d);

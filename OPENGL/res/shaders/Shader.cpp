@@ -22,7 +22,7 @@ unsigned int Shader::CreateShader(const std::string& vertexShader,const std:: st
     unsigned int vs = compileshader(GL_VERTEX_SHADER,vertexShader);
     unsigned int fs = compileshader(GL_FRAGMENT_SHADER,fragmentShader);
 
-    GLCall(glAttachShader(program,vs));
+    GLCall(glachShader(program,vs));
     GLCall(glAttachShader(program,fs));
     GLCall(glLinkProgram(program));
     GLCall(glValidateProgram(program));
@@ -89,6 +89,6 @@ void Shader::SetUniform4f(const std::string& name, float v0,float v1, float v2, 
 int Shader::GetUniformLocation(const std::string& name){
     GLCall(int location = glGetUniformLocation(m_RendererID,name.c_str));
     if (location==-1) 
-        std::coput<< "Warning: uniform '" << name << "' doesn't exist!" std::endl;
+        std::cout<< "Warning: uniform '" << name << "' doesn't exist!" std::endl;
     return location;
  }
