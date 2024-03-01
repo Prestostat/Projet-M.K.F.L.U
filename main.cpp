@@ -196,19 +196,23 @@ int main(){
             if (ImGui::Button("affiche densité"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
                 affiche_densité++;
             ImGui::SameLine();
-            ImGui::Text("multiplicateur de manque d'intelligence = %d", affiche_densité);
+            ImGui::Text("addiche densité = %d", affiche_densité);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::Text("espace : pause "); 
+            ImGui::Text("clique droit : met toutes les vitesses à 0 "); 
+            ImGui::Text("clique gauche : force centrée sur la souris");
+            ImGui::Text("a : attraction centrée sur la souris avec les multiplicateurs du clique gauche");  
+            ImGui::Text("e : répulsion centrée sur la souris avec les multiplicateurs du clique gauche"); 
             clique_gauche=ImGui::IsMouseClicked(0,true);
             clique_droit=ImGui::IsMouseClicked(1,true);
-            a_key=io.KeysDown['A'];
-            z_key=io.KeysDown['Z'];
+            a_key=io.KeysDown['Q']; // attention, c'est en Qwerty 
+            z_key=io.KeysDown['W'];
             e_key=io.KeysDown['E'];
-            q_key=io.KeysDown['Q'];
+            q_key=io.KeysDown['A'];
             s_key=io.KeysDown['S'];
             d_key=io.KeysDown['D'];
             if (io.KeysDown[' ']) {pause = !pause; std::this_thread::sleep_for(std::chrono::milliseconds(100));}
-            
 
             sourisx=io.MousePos.x;
             sourisy=io.MousePos.y;

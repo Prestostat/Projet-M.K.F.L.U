@@ -60,7 +60,7 @@ void Ensemble::deplacement() {
 }
 
 
-void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float multiplicateur_pression_,float multiplicateur_pression_proche_,float densite_visee_,float dt_,float rayon_influence_,float coeff_amorti_,float viscstrength_,float sourisx_,float sourisy_,float rayon_action_clique_gauche_,float puissance_action_clique_gauche_,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool pause){
+void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float multiplicateur_pression_,float multiplicateur_pression_proche_,float densite_visee_,float dt_,float rayon_influence_,float coeff_amorti_,float viscstrength_,float sourisx_,float sourisy_,float rayon_action_clique_gauche_,float puissance_action_clique_gauche_,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool pause_){
     rayon_affichage = rayon_affichage_;
     g = g_;
     masse =masse_;
@@ -78,6 +78,14 @@ void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float mult
 
     clique_gauche=clique_gauche_;
     clique_droit=clique_droit_;
+    a_key=a;
+    z_key=z;
+    e_key=e;
+    q_key=q;
+    s_key=s;
+    d_key=d;
+    pause=pause_;
+    
 
     
     if (! pause){
@@ -377,6 +385,36 @@ void Ensemble::force_souris(){
                 float infl = fonction_influence(dst,rayon_action_clique_gauche);
                 data[i].vx+=dt*infl*puissance_action_clique_gauche*((data[i].x-x)/dst);
                 data[i].vy+=dt*infl*puissance_action_clique_gauche*((data[i].y-y)/dst);
+            }
+        }
+    }
+    if (a_key && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
+        float x = 2*sourisx/960.0 -1;
+        float y = -sourisy*2/960.0 +1;
+        for(unsigned int i=0;i<nombre_de_particules;i++){
+            float dst = sqrt(pow((data[i].x-x),2)+pow((data[i].y)-y,2));
+            if (dst==0){
+                dst+=1;
+            }
+            if (dst<rayon_action_clique_gauche){  
+                float infl = fonction_influence(dst,rayon_action_clique_gauche);
+                data[i].vx+=-dt*infl*abs(puissance_action_clique_gauche)*((data[i].x-x)/dst);
+                data[i].vy+=-dt*infl*abs(puissance_action_clique_gauche)*((data[i].y-y)/dst);
+            }
+        }
+    }
+    if (e_key && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
+        float x = 2*sourisx/960.0 -1;
+        float y = -sourisy*2/960.0 +1;
+        for(unsigned int i=0;i<nombre_de_particules;i++){
+            float dst = sqrt(pow((data[i].x-x),2)+pow((data[i].y)-y,2));
+            if (dst==0){
+                dst+=1;
+            }
+            if (dst<rayon_action_clique_gauche){  
+                float infl = fonction_influence(dst,rayon_action_clique_gauche);
+                data[i].vx+=dt*infl*abs(puissance_action_clique_gauche)*((data[i].x-x)/dst);
+                data[i].vy+=dt*infl*abs(puissance_action_clique_gauche)*((data[i].y-y)/dst);
             }
         }
     }
