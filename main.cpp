@@ -16,6 +16,9 @@
 #include <map>
 #include <chrono>
 #include <thread>
+#include <omp.h>
+#include <stdio.h>
+#include <stdlib.h>
 #define PI 3.14159265
 #define E 2.71828182846
 using namespace std;
@@ -28,9 +31,12 @@ float mini(float a,float b){
 
 
 int main(){
+    omp_set_num_threads(16);
+    
+
     unsigned int nombre_de_points =3; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
-    unsigned int nombre_de_particules =1000;
+    unsigned int nombre_de_particules =2000;
     bool affiche_densité =false;
     int resolution_densite = 100;
     int sens_action_clique_gauche=1;
@@ -40,7 +46,7 @@ int main(){
     float masse = 1;
     float multiplicateur_pression = 100;
     float multiplicateur_pression_proche = 10000;
-    float densite_visee = 1000;
+    float densite_visee = 2000;
     float dt =0.002;
     float rayon_influence =0.1;
     float coeff_amorti = 1;

@@ -6,11 +6,11 @@ SOURCES=main.cpp physique/cpp/ensemble.cpp physique/cpp/particule.cpp OPENGL/cpp
 # Nom du compilateur
 CXX=g++
 # Arguments pour l'étape d'édition de liens : tous les avertissements
-LDFLAGS=-Wall -Wextra -lGL -lGLU -lGLEW -lglfw -lX11 -lXxf86vm -lXrandr -lpthread -lXi -ldl -lXinerama -lXcursor 
+LDFLAGS=-Wall -Wextra -lGL -lGLU -lGLEW -lglfw -lX11 -lXxf86vm -lXrandr -lpthread -lXi -ldl -lXinerama -lXcursor -fopenmp
 # Arguments pour l'etape de compilation : tous les avertissements (et même plus) sauf "ignored-attributes" (présence d'un bug dans GCC version 6 et plus)
-CPPFLAGS=-Wall -Wextra -std=c++11
+CPPFLAGS=-Wall -Wextra -std=c++11 -fopenmp
 # Librairies : none
-LDLIBS= -lGL -lGLU -lGLEW -lglfw -lX11 -lXxf86vm -lXrandr -lpthread -lXi -ldl -lXinerama -lXcursor
+LDLIBS= -lGL -lGLU -lGLEW -lglfw -lX11 -lXxf86vm -lXrandr -lpthread -lXi -ldl -lXinerama -lXcursor -fopenmp
 
 # Liste des fichier objet (*.o), générée automagiquement
 OBJETS=$(subst .cpp,.o,$(SOURCES))

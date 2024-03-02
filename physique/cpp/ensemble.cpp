@@ -3,6 +3,9 @@
 #include <math.h>
 #include <iostream>
 #include <map>
+#include <omp.h>
+#include <stdio.h>
+#include <stdlib.h>
 #define retrun return //permet d'écrir retrun a la place de return :sunglases:
 using namespace std;
 
@@ -45,6 +48,7 @@ Ensemble::Ensemble(const Ensemble& other) {
 
 
 void Ensemble::gravite() {
+    #pragma omp parallel for
     for (unsigned int i=0; i<nombre_de_particules;i++) {
         data[i].vy-=g*dt;
     }
@@ -52,6 +56,7 @@ void Ensemble::gravite() {
 
 
 void Ensemble::deplacement() {
+    #pragma omp parallel for
     for (unsigned int i=0; i<nombre_de_particules;i++) {
         data[i].x+=data[i].vx*dt;
         data[i].y+=data[i].vy*dt;
@@ -89,21 +94,52 @@ void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float mult
 
     
     if (! pause){
+        #pragma omp parallel for
         for(unsigned int i=0; i<nombre_de_particules;i++){
-            data[i].x_predit = data[i].x+data[i].vx*pow(10,-7);
-            data[i].y_predit = data[i].y+data[i].vy*pow(10,-7);
+            data[i].x_predit = data[i].x+data[i].vx*pow(10,-5);
+            data[i].y_predit = data[i].y+data[i].vy*pow(10,-5);
             data[i].vx*=0.995;
             data[i].vy*=0.995;
         }
-        gravite();
+        
         indices = liste_indice ();
         tri_liste_indice(indices);
         indice_debut = liste_indice_debut(indices);
         float* de = densite();
+
+   #pragma omp parallel
+    {
+        #pragma omp sections
+        {
+            #pragma omp section
+            {
+                gravite();
+            }
+            #pragma omp section
+            {
+                force_pression(de);
+            }
+            #pragma omp section
+            {
+                force_pression_proche(de);
+            }
+            #pragma omp section
+            {
+                visc(de);
+            }
+            #pragma omp section
+            {
+                force_souris();
+            }
+        }
+    }
+        /*
+        gravite();
         force_pression(de);
         force_pression_proche(de);
         visc(de);
         force_souris();
+        */
         deplacement();
         free(de);
     }
@@ -217,6 +253,7 @@ float aire_triangle(float base, float hauteur){
 
 float* Ensemble::densite(){
     float* dens=(float*)malloc(nombre_de_particules*sizeof(float));
+    #pragma omp parallel for
     for(unsigned int i=0;i<nombre_de_particules;i++){
         dens[i]=densite_ponctuelle_visee(data[i].x_predit,data[i].y_predit);
         
@@ -236,6 +273,7 @@ void Ensemble::pression_ponctuelle(unsigned int n,  float* densite,float* pressi
         coord_temporaire[1]=coord[1]-1+i/3;
         liste_cellules[i] = cle(coord_temporaire,nombre_de_particules);
     }
+    #pragma omp parallel for
     for(unsigned int i=0;i<9;i++){
         int j=indice_debut[liste_cellules[i]];
         if (j>=0) {
@@ -280,6 +318,7 @@ void Ensemble::pression_ponctuelle(unsigned int n,  float* densite,float* pressi
 
 void Ensemble::force_pression(float* d){
     float* pression = (float*)malloc(2*sizeof(float));
+    #pragma omp parallel for
     for(unsigned int i=0; i<nombre_de_particules;i++){
         pression_ponctuelle(i,d,pression);
         data[i].vx+=dt*pression[0]/d[i];
@@ -302,6 +341,7 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc){
         coord_temporaire[1]=coord[1]-1+i/3;
         liste_cellules[i] = cle(coord_temporaire,nombre_de_particules);
     }
+    #pragma omp parallel for
     for(unsigned int i=0;i<9;i++){
         int j=indice_debut[liste_cellules[i]];
         if (j>=0) {
@@ -325,6 +365,7 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc){
 
 void Ensemble::visc(float* d){
     float* viscosite = (float*)malloc(2*sizeof(float));
+    #pragma omp parallel for
     for(unsigned int i=0; i<nombre_de_particules;i++){
         visc_ponctuelle(i,viscosite);
         data[i].vx += dt*viscosite[0]/d[i];
@@ -336,6 +377,7 @@ void Ensemble::visc(float* d){
 
 int** Ensemble::liste_indice() {
     int** liste= (int**)malloc(nombre_de_particules*sizeof(int*));
+    #pragma omp parallel for
     for (unsigned int i=0; i<nombre_de_particules;i++){
         liste[i] = (int*)malloc(2*sizeof(int));
         liste[i][0] = (int)i;
@@ -376,6 +418,7 @@ void Ensemble::force_souris(){
     if (clique_gauche && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
         float x = 2*sourisx/960.0 -1;
         float y = -sourisy*2/960.0 +1;
+        #pragma omp parallel for
         for(unsigned int i=0;i<nombre_de_particules;i++){
             float dst = sqrt(pow((data[i].x-x),2)+pow((data[i].y)-y,2));
             if (dst==0){
@@ -391,6 +434,7 @@ void Ensemble::force_souris(){
     if (a_key && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
         float x = 2*sourisx/960.0 -1;
         float y = -sourisy*2/960.0 +1;
+        #pragma omp parallel for
         for(unsigned int i=0;i<nombre_de_particules;i++){
             float dst = sqrt(pow((data[i].x-x),2)+pow((data[i].y)-y,2));
             if (dst==0){
@@ -406,6 +450,7 @@ void Ensemble::force_souris(){
     if (e_key && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
         float x = 2*sourisx/960.0 -1;
         float y = -sourisy*2/960.0 +1;
+        #pragma omp parallel for
         for(unsigned int i=0;i<nombre_de_particules;i++){
             float dst = sqrt(pow((data[i].x-x),2)+pow((data[i].y)-y,2));
             if (dst==0){
@@ -419,27 +464,32 @@ void Ensemble::force_souris(){
         }
     }
     if (clique_droit && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
+        #pragma omp parallel for
         for(unsigned int i=0;i<nombre_de_particules;i++){
             data[i].vx=0;
             data[i].vy=0;
         }    
     }
     if(z_key){
+        #pragma omp parallel for
         for(unsigned int i=0;i<nombre_de_particules;i++){
             data[i].vy+=dt*10;
         }
     }
     if(d_key){
+        #pragma omp parallel for
         for(unsigned int i=0;i<nombre_de_particules;i++){
             data[i].vx+=dt*10;
         }
     }
     if(q_key){
+        #pragma omp parallel for
         for(unsigned int i=0;i<nombre_de_particules;i++){
             data[i].vx-=dt*10;
         }
     }
     if(s_key){
+        #pragma omp parallel for
         for(unsigned int i=0;i<nombre_de_particules;i++){
             data[i].vy-=dt*10;
         }
@@ -458,6 +508,7 @@ void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* densite,float*
         coord_temporaire[1]=coord[1]-1+i/3;
         liste_cellules[i] = cle(coord_temporaire,nombre_de_particules);
     }
+    #pragma omp parallel for
     for(unsigned int i=0;i<9;i++){
         int j=indice_debut[liste_cellules[i]];
         if (j>=0) {
@@ -502,6 +553,7 @@ void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* densite,float*
 
 void Ensemble::force_pression_proche(float* d){
     float* pression = (float*)malloc(2*sizeof(float));
+    #pragma omp parallel for
     for(unsigned int i=0; i<nombre_de_particules;i++){
         pression_ponctuelle_proche(i,d,pression);
         data[i].vx+=dt*pression[0]/d[i];
