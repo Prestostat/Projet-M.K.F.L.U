@@ -140,6 +140,7 @@ void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float mult
         visc(de);
         force_souris();
         */
+        bord();
         deplacement();
         free(de);
     }
@@ -348,9 +349,9 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc){
             while(indices[j][1]==indices[indice_debut[liste_cellules[i]]][1]){
                 unsigned int m=indices[j][0];
                 if (m!=n) {
-                    float infl = data[i].influence(data[n].x,data[n].y,rayon_influence);
-                    visc[0] += (data[i].vx-data[n].vx)*infl*viscstrength;
-                    visc[1] += (data[i].vy-data[n].vy)*infl*viscstrength;
+                    float infl = data[m].influence(data[n].x,data[n].y,rayon_influence);
+                    visc[0] += (data[m].vx-data[n].vx)*infl*viscstrength/(rayon_influence*rayon_influence);
+                    visc[1] += (data[m].vy-data[n].vy)*infl*viscstrength/(rayon_influence*rayon_influence);
                     }
                 j++;
                 if ((unsigned int)j==nombre_de_particules){
@@ -361,7 +362,6 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc){
     }
     free(coord);free(coord_temporaire);free(liste_cellules);
 }
-
 
 void Ensemble::visc(float* d){
     float* viscosite = (float*)malloc(2*sizeof(float));
@@ -374,6 +374,23 @@ void Ensemble::visc(float* d){
     free(viscosite);
 }
 
+void Ensemble::bord(){
+    #pragma omp parallel for
+    for(unsigned int m=0;m<nombre_de_particules;m++){
+        if (data[m].x<-0.95){
+            float dist1 = data[m].x + 1;
+            data[m].vy = data[m].vy *(1-0.05*exp(-dist1*dist1));
+            }
+        if (data[m].x>0.95){
+            float dist2 = 1 - data[m].x;
+            data[m].vy = data[m].vy * (1-0.05*exp(-dist2*dist2));
+            }
+        if (data[m].y<-0.95){
+            float dist3 = data[m].y + 1;
+            data[m].vx = data[m].vx * (1-0.05*exp(-dist3*dist3));
+            }
+    }
+}
 
 int** Ensemble::liste_indice() {
     int** liste= (int**)malloc(nombre_de_particules*sizeof(int*));

@@ -50,7 +50,7 @@ int main(){
     float dt =0.002;
     float rayon_influence =0.1;
     float coeff_amorti = 1;
-    float viscstrength = 10;
+    float viscstrength = 0.001;
     float sourisx = 0;
     float sourisy = 0;
     float rayon_action_clique_gauche =0.5;
