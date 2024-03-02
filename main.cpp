@@ -31,7 +31,7 @@ float mini(float a,float b){
 
 
 int main(){
-    omp_set_num_threads(16);
+    omp_set_num_threads(4);
     
 
     unsigned int nombre_de_points =3; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
