@@ -47,6 +47,7 @@ class Ensemble {
     void force_pression(float* d);
     void visc_ponctuelle(unsigned int n, float* visc);
     void visc(float* d);
+    void bord();
     int** liste_indice();
     void tri_liste_indice( int** liste );
     int* liste_indice_debut(int**liste);
