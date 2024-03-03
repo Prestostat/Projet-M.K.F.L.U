@@ -6,6 +6,7 @@
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#define E 2.71828182846
 #define retrun return //permet d'écrir retrun a la place de return :sunglases:
 using namespace std;
 
@@ -46,26 +47,7 @@ Ensemble::Ensemble(const Ensemble& other) {
 
 }
 
-
-void Ensemble::gravite() {
-    #pragma omp parallel for
-    for (unsigned int i=0; i<nombre_de_particules;i++) {
-        data[i].vy-=g*dt;
-    }
-}
-
-
-void Ensemble::deplacement() {
-    #pragma omp parallel for
-    for (unsigned int i=0; i<nombre_de_particules;i++) {
-        data[i].x+=data[i].vx*dt;
-        data[i].y+=data[i].vy*dt;
-        data[i].collision(coeff_amorti);
-    }
-}
-
-
-void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float multiplicateur_pression_,float multiplicateur_pression_proche_,float densite_visee_,float dt_,float rayon_influence_,float coeff_amorti_,float viscstrength_,float sourisx_,float sourisy_,float rayon_action_clique_gauche_,float puissance_action_clique_gauche_,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool pause_){
+void Ensemble::actualise_constantes(float rayon_affichage_,float g_,float masse_,float multiplicateur_pression_,float multiplicateur_pression_proche_,float densite_visee_,float dt_,float rayon_influence_,float coeff_amorti_,float viscstrength_,float sourisx_,float sourisy_,float rayon_action_clique_gauche_,float puissance_action_clique_gauche_,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool pause_){
     rayon_affichage = rayon_affichage_;
     g = g_;
     masse =masse_;
@@ -90,24 +72,9 @@ void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float mult
     s_key=s;
     d_key=d;
     pause=pause_;
-    
-
-    
-    if (! pause){
-        #pragma omp parallel for
-        for(unsigned int i=0; i<nombre_de_particules;i++){
-            data[i].x_predit = data[i].x+data[i].vx*pow(10,-5);
-            data[i].y_predit = data[i].y+data[i].vy*pow(10,-5);
-            data[i].vx*=0.995;
-            data[i].vy*=0.995;
-        }
-        
-        indices = liste_indice ();
-        tri_liste_indice(indices);
-        indice_debut = liste_indice_debut(indices);
-        float* de = densite();
-
-   #pragma omp parallel
+}
+void Ensemble::addforce(float* de){
+     #pragma omp parallel
     {
         #pragma omp sections
         {
@@ -133,15 +100,47 @@ void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float mult
             }
         }
     }
-        /*
-        gravite();
-        force_pression(de);
-        force_pression_proche(de);
-        visc(de);
-        force_souris();
-        */
+
+}
+void Ensemble::gravite() {
+    #pragma omp parallel for
+    for (unsigned int i=0; i<nombre_de_particules;i++) {
+        data[i].vy-=g*dt;
+    }
+}
+
+
+void Ensemble::deplacement() {
+    #pragma omp parallel for
+    for (unsigned int i=0; i<nombre_de_particules;i++) {
+        data[i].x+=data[i].vx*dt;
+        data[i].y+=data[i].vy*dt;
+        data[i].collision(coeff_amorti);
+    }
+}
+
+void Ensemble::actualise_listes(){
+    indices = liste_indice ();
+    tri_liste_indice(indices);
+    indice_debut = liste_indice_debut(indices);
+
+}
+
+void Ensemble::evolution(){
+    
+    
+    if (! pause){
+        #pragma omp parallel for
+        for(unsigned int i=0; i<nombre_de_particules;i++){
+            data[i].x_predit = data[i].x+data[i].vx*pow(10,-5);
+            data[i].y_predit = data[i].y+data[i].vy*pow(10,-5);
+        }
+        
+        float* de = densite();
+        addforce(de);
         deplacement();
         free(de);
+        
     }
     
 }
@@ -225,7 +224,7 @@ void Ensemble::evolution(float rayon_affichage_,float g_,float masse_,float mult
             }
         }
     }
-    
+
     d+= a*densite_visee/(M_PI*rayon_influence*rayon_influence); //metttre cette ligne en commentaire pour avoir la version précédente de la fonction
 
     free(coord);free(coord_temporaire);free(liste_cellules);
@@ -252,7 +251,9 @@ float aire_triangle(float base, float hauteur){
 
 
 float* Ensemble::densite(){
+    
     float* dens=(float*)malloc(nombre_de_particules*sizeof(float));
+    
     #pragma omp parallel for
     for(unsigned int i=0;i<nombre_de_particules;i++){
         dens[i]=densite_ponctuelle_visee(data[i].x_predit,data[i].y_predit);
@@ -261,6 +262,47 @@ float* Ensemble::densite(){
     return(dens);
 }
 
+void Ensemble::frottement_paroi(float vx_paroi, float vy_paroi, float xlim_d, float xlim_g, float ylim_h, float ylim_b,float coeff_adherence){
+    //d, g, h, b pour droite, gauche, haut, bas; droite signifie par exemple qu'on est à droite de la paroi
+
+    //ne marchera pas pour un cercle, mais flemme pour le moment de rajouter une variable qui correspond 
+    //à la normale donc tout sera droit pour le moment
+
+    //(v-v_paroi).n = 0
+    for(unsigned int i = 0; i<nombre_de_particules; i++){
+
+    if ((data[i].x-rayon_influence)<xlim_d){
+        data[i].vy = vy_paroi+(data[i].vy-vy_paroi)*pow((data[i].x-xlim_d)/(rayon_influence),4);
+    }
+    if ((data[i].x+rayon_influence)>xlim_g){
+        data[i].vy = vy_paroi+(data[i].vx-vy_paroi)*pow((data[i].x-xlim_g)/(rayon_influence),4);
+    }
+    if ((data[i].y-rayon_influence)<ylim_h){
+        data[i].vx = vx_paroi+(data[i].vx-vx_paroi)*pow((data[i].y-ylim_h)/(rayon_influence),4);
+    }
+    if ((data[i].y+rayon_influence)>ylim_b){
+        data[i].vx = vx_paroi+(data[i].vx-vx_paroi)*pow((data[i].y-ylim_b)/(rayon_influence),4);
+    }
+    //je ne vois pas pourquoi il y a besoin de refaire les angles (Luc)
+    /*
+    if(((data[i].x-rayon_influence)<xlim_d) && ((data[i].y-rayon_influence)<ylim_h)){
+        data[i].vx = vx_paroi;
+        data[i].vy = vy_paroi;
+    }
+    if(((data[i].x-rayon_influence)<xlim_d) && ((data[i].y+rayon_influence)>ylim_b)){
+        data[i].vx = vx_paroi;
+        data[i].vy = vy_paroi;
+    }
+    if(((data[i].x+rayon_influence)>xlim_g) && ((data[i].y-rayon_influence)<ylim_h)){
+        data[i].vx = vx_paroi;
+        data[i].vy = vy_paroi;
+    }
+    if(((data[i].x+rayon_influence)>xlim_g) && ((data[i].y+rayon_influence)>ylim_b)){
+        data[i].vx = vx_paroi;
+        data[i].vy = vy_paroi;
+    }*/
+    }
+}
 
 void Ensemble::pression_ponctuelle(unsigned int n,  float* densite,float* pression){
     pression[0]=0;
@@ -348,9 +390,9 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc){
             while(indices[j][1]==indices[indice_debut[liste_cellules[i]]][1]){
                 unsigned int m=indices[j][0];
                 if (m!=n) {
-                    float infl = data[i].influence(data[n].x,data[n].y,rayon_influence);
-                    visc[0] += (data[i].vx-data[n].vx)*infl*viscstrength;
-                    visc[1] += (data[i].vy-data[n].vy)*infl*viscstrength;
+                    float infl = data[m].influence(data[n].x,data[n].y,rayon_influence);
+                    visc[0] += (data[m].vx-data[n].vx)*infl*viscstrength/(rayon_influence*rayon_influence);
+                    visc[1] += (data[m].vy-data[n].vy)*infl*viscstrength/(rayon_influence*rayon_influence);
                     }
                 j++;
                 if ((unsigned int)j==nombre_de_particules){
