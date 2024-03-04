@@ -3,11 +3,9 @@
     
     layout(location = 0) in vec4 position;
     
-    out vec4 info;
-    
     void main()
     { 
-      info.xyzw = vec4(0.0,0.0,0.5,0.5);
+
       gl_Position =position; 
     };
 

@@ -30,7 +30,7 @@ float mini(float a,float b){
 }
 
 
- void fenetre_ImGui(float* rayon_affichage,float* g,float* logg,float* multiplicateur_pression,float* logmp,float* multiplicateur_pression_proche,float* logmpp,float* densite_visee,float* dt, float* logdt,float* rayon_influence,float*coeff_amorti,float*viscstrength,float* sourisx,float* sourisy,float* rayon_action_clique_gauche,float* puissance_action_clique_gauche,int* sens_action_clique_gauche,float* logpacg,float* coeff_adherence,float* logvc ,float* vitesse_caracteristique,float* transparence,bool* flou,bool* clique_gauche,bool* clique_droit,bool* a,bool*z,bool* e,bool* q,bool* s, bool* d, bool* pause){
+ void fenetre_ImGui(float* rayon_affichage,float* g,float* logg,float* multiplicateur_pression,float* logmp,float* multiplicateur_pression_proche,float* logmpp,float* densite_visee,float* dt, float* logdt,float* rayon_influence,float*coeff_amorti,float*viscstrength,float* sourisx,float* sourisy,float* rayon_action_clique_gauche,float* puissance_action_clique_gauche,int* sens_action_clique_gauche,float* logpacg,float* coeff_adherence,float* logvc ,float* vitesse_caracteristique,float* transparence,bool* flou,bool* affiche_densite,bool* clique_gauche,bool* clique_droit,bool* a,bool*z,bool* e,bool* q,bool* s, bool* d, bool* pause){
     ImGui_ImplGlfwGL3_NewFrame();
         {
             ImGuiIO& io = ImGui::GetIO();
@@ -59,6 +59,8 @@ float mini(float a,float b){
                 *sens_action_clique_gauche*=-1;
             if (ImGui::Button("activer le flou")){
                 *flou = ! *flou;} 
+            if (ImGui::Button("Voir la densité")){
+                *affiche_densite = ! *affiche_densite;} 
             ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::Text("espace : pause "); 
@@ -89,8 +91,8 @@ int main(){
     unsigned int nombre_de_points =3; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
     unsigned int nombre_de_particules =1000;
-    //bool affiche_densité =false;
-    //int resolution_densite = 100;
+    bool affiche_densite =false;
+    int resolution_densite = 100;
     int sens_action_clique_gauche=1;
 
     float rayon_affichage = 0.005;
@@ -185,12 +187,13 @@ int main(){
         indices[3*i+2]=i+2;
     }
     float position[nombre_de_points*2];
-    //unsigned int indices_densite[6] = {0,1,2,1,2,3};
-    //float position_carre[4*2];
+    unsigned int indices_densite[6] = {0,1,2,1,2,3};
+    float position_carre[4*2];
     GLCall(glEnable(GL_BLEND));
     GLCall(glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA));
 
-    Shader shader("OPENGL/res/shaders/Basic.shader");
+    Shader triangle_shader("OPENGL/res/shaders/triangle.shader");
+    Shader disque_shader("OPENGL/res/shaders/disque.shader");
     Renderer renderer;
     ImGui::CreateContext();
     ImGui_ImplGlfwGL3_Init(window, true);
@@ -205,12 +208,12 @@ int main(){
     {
         /* Render here */
         renderer.Clear();
-        fenetre_ImGui(&rayon_affichage,&g, &logg, &multiplicateur_pression, &logmp, &multiplicateur_pression_proche, &logmpp, &densite_visee, &dt,  &logdt, &rayon_influence, &coeff_amorti, &viscstrength, &sourisx, &sourisy, &rayon_action_clique_gauche, &puissance_action_clique_gauche,&sens_action_clique_gauche, &logpacg,&coeff_adherence, &logvc , &vitesse_caracteristique,&transparence,&flou, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key,&pause);
+        fenetre_ImGui(&rayon_affichage,&g, &logg, &multiplicateur_pression, &logmp, &multiplicateur_pression_proche, &logmpp, &densite_visee, &dt,  &logdt, &rayon_influence, &coeff_amorti, &viscstrength, &sourisx, &sourisy, &rayon_action_clique_gauche, &puissance_action_clique_gauche,&sens_action_clique_gauche, &logpacg,&coeff_adherence, &logvc , &vitesse_caracteristique,&transparence,&flou,&affiche_densite, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key,&pause);
         
-        /*
-        affiche_densité = affiche_densité%2;
+        
+        
 
-        if (affiche_densité){
+        if (affiche_densite){
             float pas =2.0/resolution_densite;
             for (unsigned int i=0;i<resolution_densite*resolution_densite;i++){
                 position_carre[0]=-1.0+i%resolution_densite*pas;
@@ -227,20 +230,20 @@ int main(){
                 float g=mini(0.0,pow(mini(abs(densité_grille/densite_visee),abs(2-densité_grille/densite_visee)),4));
                 float b=maxi(0.0,1-densité_grille/densite_visee);
 
-                shader.Bind();
-                shader.SetUniform4f("u_color",r,g,b,1.0f);            
+                triangle_shader.Bind();
+                triangle_shader.SetUniform4f("u_color",r,g,b,1.0f);            
                 VertexArray va;                
                 VertexBuffer vb(position_carre,4*2*sizeof(float));
                 VertexBufferLayout layout;
                 layout.Push<float>(2);
                 va.AddBuffer(vb,layout);
                 IndexBuffer ib(indices_densite,6);
-                renderer.Draw(va,ib,shader);
+                renderer.Draw(va,ib,triangle_shader);
 
             }
 
             
-        }*/
+        }
         
 
         for (unsigned int i=0;i<nombre_de_particules;i++){
@@ -254,15 +257,15 @@ int main(){
             
             clear_color=fluide.data[i].couleur(vitesse_caracteristique);
 
-            shader.Bind();
+            disque_shader.Bind();
             if (flou){
-                shader.SetUniform4f("information",transparence/(densite_visee*rayon_influence),rayon_influence/2,(fluide.data[i].x+1)/2,(fluide.data[i].y+1)/2);
+                disque_shader.SetUniform4f("information",transparence/(densite_visee*rayon_influence),rayon_influence/2,(fluide.data[i].x+1)/2,(fluide.data[i].y+1)/2);
             }
             else {
-                shader.SetUniform4f("information",10000,rayon_affichage/2,(fluide.data[i].x+1)/2,(fluide.data[i].y+1)/2);
+                disque_shader.SetUniform4f("information",10000,rayon_affichage/2,(fluide.data[i].x+1)/2,(fluide.data[i].y+1)/2);
             }
             
-            shader.SetUniform4f("u_color",clear_color[0],clear_color[1],clear_color[2],1.0f);
+            disque_shader.SetUniform4f("u_color",clear_color[0],clear_color[1],clear_color[2],1.0f);
                         
             VertexArray va;                
             VertexBuffer vb(position,nombre_de_points*2*sizeof(float));
@@ -270,7 +273,7 @@ int main(){
             layout.Push<float>(2);
             va.AddBuffer(vb,layout);
             IndexBuffer ib(indices,3*nombre_de_triangles);
-            renderer.Draw(va,ib,shader);
+            renderer.Draw(va,ib,disque_shader);
         }
 
 
@@ -285,15 +288,15 @@ int main(){
             
             clear_color=fluide2.data[i].couleur(vitesse_caracteristique);
 
-            shader.Bind();
+            disque_shader.Bind();
             if (flou){
-                shader.SetUniform4f("information",transparence/(densite_visee*rayon_influence),rayon_influence/2,(fluide2.data[i].x+1)/2,(fluide2.data[i].y+1)/2);
+                disque_shader.SetUniform4f("information",transparence/(densite_visee*rayon_influence),rayon_influence/2,(fluide2.data[i].x+1)/2,(fluide2.data[i].y+1)/2);
             }
             else {
-                shader.SetUniform4f("information",10000,rayon_affichage/2,(fluide2.data[i].x+1)/2,(fluide2.data[i].y+1)/2);
+                disque_shader.SetUniform4f("information",10000,rayon_affichage/2,(fluide2.data[i].x+1)/2,(fluide2.data[i].y+1)/2);
             }
             
-            shader.SetUniform4f("u_color",0,1,0,1.0f);
+            disque_shader.SetUniform4f("u_color",0,1,0,1.0f);
                         
             VertexArray va;                
             VertexBuffer vb(position,nombre_de_points*2*sizeof(float));
@@ -301,7 +304,7 @@ int main(){
             layout.Push<float>(2);
             va.AddBuffer(vb,layout);
             IndexBuffer ib(indices,3*nombre_de_triangles);
-            renderer.Draw(va,ib,shader);
+            renderer.Draw(va,ib,disque_shader);
         }
         
         fluide2.actualise_constantes(rayon_affichage,g,masse,multiplicateur_pression,multiplicateur_pression_proche,densite_visee,dt,rayon_influence,coeff_amorti,viscstrength,sourisx,sourisy,rayon_action_clique_gauche,puissance_action_clique_gauche,clique_gauche,clique_droit,a_key,z_key,e_key,q_key,s_key,d_key,pause);

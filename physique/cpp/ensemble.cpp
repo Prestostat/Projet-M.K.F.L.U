@@ -272,16 +272,16 @@ void Ensemble::frottement_paroi(float vx_paroi, float vy_paroi, float xlim_d, fl
     for(unsigned int i = 0; i<nombre_de_particules; i++){
 
     if ((data[i].x-rayon_influence)<xlim_d){
-        data[i].vy = vy_paroi+(data[i].vy-vy_paroi)*pow((data[i].x-xlim_d)/(rayon_influence),4);
+        data[i].vy = vy_paroi+(data[i].vy-vy_paroi)*pow((data[i].x-xlim_d)/(rayon_influence),2);
     }
     if ((data[i].x+rayon_influence)>xlim_g){
-        data[i].vy = vy_paroi+(data[i].vx-vy_paroi)*pow((data[i].x-xlim_g)/(rayon_influence),4);
+        data[i].vy = vy_paroi+(data[i].vx-vy_paroi)*pow((data[i].x-xlim_g)/(rayon_influence),2);
     }
     if ((data[i].y-rayon_influence)<ylim_h){
-        data[i].vx = vx_paroi+(data[i].vx-vx_paroi)*pow((data[i].y-ylim_h)/(rayon_influence),4);
+        data[i].vx = vx_paroi+(data[i].vx-vx_paroi)*pow((data[i].y-ylim_h)/(rayon_influence),2);
     }
     if ((data[i].y+rayon_influence)>ylim_b){
-        data[i].vx = vx_paroi+(data[i].vx-vx_paroi)*pow((data[i].y-ylim_b)/(rayon_influence),4);
+        data[i].vx = vx_paroi+(data[i].vx-vx_paroi)*pow((data[i].y-ylim_b)/(rayon_influence),2);
     }
     //je ne vois pas pourquoi il y a besoin de refaire les angles (Luc)
     /*
