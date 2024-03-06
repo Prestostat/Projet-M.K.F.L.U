@@ -103,7 +103,8 @@ float* coeff_amorti,float* coeff_viscosite,float* coeff_adherence,float* logg,fl
         ImGui::SliderFloat("log(g)", logg,0.0 ,10.0 );
         *g=pow(10,*logg);
         if (ImGui::Button("g=0")){
-            *g = 0;} 
+            *logg = -100000000;
+            *g=pow(10,*logg);} 
         ImGui::SliderFloat("masse", masse,0 ,10.0 );
         ImGui::SliderFloat("log(multiplicateur_pression)", logmp,0.0 , 10.0);
         *multiplicateur_pression=pow(10,*logmp);
@@ -202,7 +203,10 @@ int main(){
 
     
     //Paramètres d'interaction entre les 2 fluides
-
+    float pression_melange =1;
+    float pression_proche_melange =1;
+    float viscosite_melange=1;
+    float densite_visee_melange=1;
 
 
     // Variables outils pour changer les paramètres de façons logarithmiques.
