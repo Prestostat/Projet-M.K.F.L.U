@@ -21,8 +21,8 @@ Ensemble::Ensemble(unsigned int nb,float rayon){
     }
     for (unsigned int i=0;i<nb;i++){
         //data[i].initialise_particules(-1+1.0/N+(i%N)*2.0/N,-1+1.0/N+(i/N)*2.0/N,0,0,rayon);   //place les particles dans un carré remplissant l'espace de l'écran
-        data[i].initialise_particules(-0.5+0.5/N+(i%N)*1.0/N,-0.5+0.5/N+(i/N)*1.0/N,0,0,rayon); // CARRÉ
-        //data[i].random_initialise_particules(rayon); // RANDOM                                                                                     //(de (-1,-1) à (1,1) dépendant de leur nombre
+        //data[i].initialise_particules(-0.5+0.5/N+(i%N)*1.0/N,-0.5+0.5/N+(i/N)*1.0/N,0,0,rayon); // CARRÉ
+        data[i].random_initialise_particules(rayon); // RANDOM                                                                                     //(de (-1,-1) à (1,1) dépendant de leur nombre
     }
 }
 
@@ -47,8 +47,8 @@ Ensemble::Ensemble(const Ensemble& other) {
 
 }
 
-void Ensemble::actualise_constantes(float rayon_affichage_,float g_,float masse_,float multiplicateur_pression_,float multiplicateur_pression_proche_,float densite_visee_,float dt_,float rayon_influence_,float coeff_amorti_,float viscstrength_,float sourisx_,float sourisy_,float rayon_action_clique_gauche_,float puissance_action_clique_gauche_,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool pause_){
-    rayon_affichage = rayon_affichage_;
+void Ensemble::actualise_constantes(float rayon_collision_,float g_,float masse_,float multiplicateur_pression_,float multiplicateur_pression_proche_,float densite_visee_,float dt_,float rayon_influence_,float coeff_amorti_,float coeff_viscosite_,float sourisx_,float sourisy_,float rayon_action_clique_gauche_,float puissance_action_clique_gauche_,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool pause_){
+    rayon_collision = rayon_collision_;
     g = g_;
     masse =masse_;
     multiplicateur_pression = multiplicateur_pression_;
@@ -57,7 +57,7 @@ void Ensemble::actualise_constantes(float rayon_affichage_,float g_,float masse_
     dt =dt_;
     rayon_influence =rayon_influence_;
     coeff_amorti = coeff_amorti_;
-    viscstrength = viscstrength_;
+    coeff_viscosite = coeff_viscosite_;
     sourisx = sourisx_;
     sourisy = sourisy_;
     rayon_action_clique_gauche =rayon_action_clique_gauche_;
@@ -135,7 +135,7 @@ void Ensemble::evolution(){
             data[i].x_predit = data[i].x+data[i].vx*pow(10,-5);
             data[i].y_predit = data[i].y+data[i].vy*pow(10,-5);
         }
-        
+        actualise_listes();
         float* de = densite();
         addforce(de);
         deplacement();
@@ -151,10 +151,12 @@ void Ensemble::evolution(){
     int* coord = coordonnee(ex,ey,rayon_influence);
     int* coord_temporaire = (int*)malloc(2*sizeof(int));            
     int* liste_cellules = (int*)malloc(9*sizeof(int));
+
     for(int i=0;i<9;i++){
         coord_temporaire[0]=coord[0]-1+i%3;
         coord_temporaire[1]=coord[1]-1+i/3;
         liste_cellules[i] = cle(coord_temporaire,nombre_de_particules);
+        
     }
 
     float a = 0; //valeur de l'aire qui est en dehors de la boîte
@@ -254,7 +256,7 @@ float* Ensemble::densite(){
     
     float* dens=(float*)malloc(nombre_de_particules*sizeof(float));
     
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for(unsigned int i=0;i<nombre_de_particules;i++){
         dens[i]=densite_ponctuelle_visee(data[i].x_predit,data[i].y_predit);
         
@@ -283,24 +285,6 @@ void Ensemble::frottement_paroi(float vx_paroi, float vy_paroi, float xlim_d, fl
     if ((data[i].y+rayon_influence)>ylim_b){
         data[i].vx = vx_paroi+(data[i].vx-vx_paroi)*pow((data[i].y-ylim_b)/(rayon_influence),2);
     }
-    //je ne vois pas pourquoi il y a besoin de refaire les angles (Luc)
-    /*
-    if(((data[i].x-rayon_influence)<xlim_d) && ((data[i].y-rayon_influence)<ylim_h)){
-        data[i].vx = vx_paroi;
-        data[i].vy = vy_paroi;
-    }
-    if(((data[i].x-rayon_influence)<xlim_d) && ((data[i].y+rayon_influence)>ylim_b)){
-        data[i].vx = vx_paroi;
-        data[i].vy = vy_paroi;
-    }
-    if(((data[i].x+rayon_influence)>xlim_g) && ((data[i].y-rayon_influence)<ylim_h)){
-        data[i].vx = vx_paroi;
-        data[i].vy = vy_paroi;
-    }
-    if(((data[i].x+rayon_influence)>xlim_g) && ((data[i].y+rayon_influence)>ylim_b)){
-        data[i].vx = vx_paroi;
-        data[i].vy = vy_paroi;
-    }*/
     }
 }
 
@@ -391,8 +375,8 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc){
                 unsigned int m=indices[j][0];
                 if (m!=n) {
                     float infl = data[m].influence(data[n].x,data[n].y,rayon_influence);
-                    visc[0] += (data[m].vx-data[n].vx)*infl*viscstrength/(rayon_influence*rayon_influence);
-                    visc[1] += (data[m].vy-data[n].vy)*infl*viscstrength/(rayon_influence*rayon_influence);
+                    visc[0] += (data[m].vx-data[n].vx)*infl*coeff_viscosite/(rayon_influence*rayon_influence);
+                    visc[1] += (data[m].vy-data[n].vy)*infl*coeff_viscosite/(rayon_influence*rayon_influence);
                     }
                 j++;
                 if ((unsigned int)j==nombre_de_particules){
@@ -415,23 +399,6 @@ void Ensemble::visc(float* d){
     free(viscosite);
 }
 
-void Ensemble::bord(){
-    #pragma omp parallel for
-    for(unsigned int m=0;m<nombre_de_particules;m++){
-        if (data[m].x<-0.95){
-            float dist1 = data[m].x + 1;
-            data[m].vy = data[m].vy *(1-0.05*exp(-dist1*dist1));
-            }
-        if (data[m].x>0.95){
-            float dist2 = 1 - data[m].x;
-            data[m].vy = data[m].vy * (1-0.05*exp(-dist2*dist2));
-            }
-        if (data[m].y<-0.95){
-            float dist3 = data[m].y + 1;
-            data[m].vx = data[m].vx * (1-0.05*exp(-dist3*dist3));
-            }
-    }
-}
 
 int** Ensemble::liste_indice() {
     int** liste= (int**)malloc(nombre_de_particules*sizeof(int*));
@@ -440,6 +407,9 @@ int** Ensemble::liste_indice() {
         liste[i] = (int*)malloc(2*sizeof(int));
         liste[i][0] = (int)i;
         liste[i][1]= data[i].cle(rayon_influence,nombre_de_particules);
+        if (nombre_de_particules==500){
+            
+        }
     }
     return(liste);
 }
@@ -584,7 +554,7 @@ void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* densite,float*
                         float grad_influence = data[m].grad_influence_proche(data[m].x+x,data[m].y+y,rayon_influence);
                         float pression_mutuelle;
                         pression_mutuelle = ((densite[m])+(densite[n]))/2.0*multiplicateur_pression_proche;
-                        pression[0]+=(pression_mutuelle*grad_influence*dirx/densite[m]);
+                        pression[0]+=(pression_mutuelle*grad_influence*dirx/densite[m]);// densit[m] ou densite[n] ??
                         pression[1]+=(pression_mutuelle*grad_influence*diry/densite[m]);
                         }
                     else {
@@ -593,7 +563,7 @@ void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* densite,float*
                         float grad_influence = data[m].grad_influence_proche(data[n].x,data[n].y,rayon_influence);
                         float pression_mutuelle;
                         pression_mutuelle = ((densite[m])+(densite[n]))/2.0*multiplicateur_pression_proche;
-                        pression[0]+=-(pression_mutuelle*grad_influence*dirx/densite[m]);
+                        pression[0]+=-(pression_mutuelle*grad_influence*dirx/densite[m]);// densit[m] ou densite[n] ??
                         pression[1]+=-(pression_mutuelle*grad_influence*diry/densite[m]);
                     }
          
@@ -618,4 +588,486 @@ void Ensemble::force_pression_proche(float* d){
         data[i].vy+=dt*pression[1]/d[i];
     }
     free(pression);
+}
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Version pour 2 fluides
+
+ float Ensemble::densite_ponctuelle_visee(float ex, float ey,Ensemble* f){
+    float d=0;
+    int* coord = coordonnee(ex,ey,rayon_influence);
+    int* coord_temporaire = (int*)malloc(2*sizeof(int));            
+    int* liste_cellules = (int*)malloc(9*sizeof(int));
+    int* liste_cellules2 = (int*)malloc(9*sizeof(int));
+    for(int i=0;i<9;i++){
+        coord_temporaire[0]=coord[0]-1+i%3;
+        coord_temporaire[1]=coord[1]-1+i/3;
+        liste_cellules[i] = cle(coord_temporaire,nombre_de_particules);
+        liste_cellules2[i] = cle(coord_temporaire,(*f).nombre_de_particules);
+    }
+
+    float a = 0; //valeur de l'aire qui est en dehors de la boîte
+
+    if ((ex-rayon_influence)<-1){
+        float diff = 1+ex;
+        a = aire(rayon_influence, diff);
+        }
+    if ((ex+rayon_influence)>1){
+        float diff = 1-ex;
+        a = aire(rayon_influence, diff);
+        }
+    if ((ey-rayon_influence)<-1){
+        float diff = 1+ey;
+        a = aire(rayon_influence, diff);
+        }
+    if ((ey+rayon_influence)>1){
+        float diff = 1-ey;
+        a = aire(rayon_influence, diff);
+        }
+    if(((ex-rayon_influence)<-1) && ((ey-rayon_influence)<-1)){
+        float diff_x = 1+ex;
+        float diff_y = 1+ey;
+        a= aire(rayon_influence, diff_x);
+        a+= aire(rayon_influence, diff_y);
+        float y_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_x*diff_x) - diff_y, 0);
+        float x_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_y*diff_y) - diff_x, 0);
+        a -= (aire_triangle(y_1, x_1) + pow((x_1+y_1)/2, 2)*(M_PI/4 - 0.5));
+    }
+    if(((ex-rayon_influence)<-1) && ((ey+rayon_influence)>1)){
+        float diff_x = 1+ex;
+        float diff_y = 1-ey;
+        a= aire(rayon_influence, diff_x);
+        a+= aire(rayon_influence, diff_y);
+        float y_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_x*diff_x) - diff_y, 0);
+        float x_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_y*diff_y) - diff_x, 0);
+        a -= (aire_triangle(y_1, x_1) + pow((x_1+y_1)/2, 2)*(M_PI/4 - 0.5));
+    }
+    if(((ex+rayon_influence)>1) && ((ey-rayon_influence)<-1)){
+        float diff_x = 1-ex;
+        float diff_y = 1+ey;
+        a= aire(rayon_influence, diff_x);
+        a+= aire(rayon_influence, diff_y);
+        float y_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_x*diff_x) - diff_y, 0);
+        float x_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_y*diff_y) - diff_x, 0);
+        a -= (aire_triangle(y_1, x_1) + pow((x_1+y_1)/2, 2)*(M_PI/4 - 0.5));
+    }
+    if(((ex+rayon_influence)>1) && ((ey+rayon_influence)>1)){
+        float diff_x = 1-ex;
+        float diff_y = 1-ey;
+        a= aire(rayon_influence, diff_x);
+        a+= aire(rayon_influence, diff_y);
+        float y_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_x*diff_x) - diff_y, 0);
+        float x_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_y*diff_y) - diff_x, 0);
+        a -= (aire_triangle(y_1, x_1) + pow((x_1+y_1)/2, 2)*(M_PI/4 - 0.5));
+    }
+    
+    for(unsigned int i=0;i<9;i++){
+        
+        int j=indice_debut[liste_cellules[i]];
+        
+        if (j>=0) {
+            while(indices[j][1]==indices[indice_debut[liste_cellules[i]]][1]){
+                
+                d+=masse*data[indices[j][0]].influence(ex,ey,rayon_influence);
+                j++;
+                if ((unsigned int)j==nombre_de_particules){
+                    break;
+                }
+            }
+        }
+    }
+    
+    for(unsigned int i=0;i<9;i++){
+        int k=(*f).indice_debut[liste_cellules2[i]];
+        
+
+        if (k>=0) {
+            while((*f).indices[k][1]==(*f).indices[(*f).indice_debut[liste_cellules2[i]]][1]){
+
+                d+=(*f).masse*(*f).data[(*f).indices[k][0]].influence(ex,ey,(*f).rayon_influence);
+                k++;
+                if ((unsigned int)k==(*f).nombre_de_particules){
+                    break;
+                }
+            }
+        }
+    }
+
+    d+= a*densite_visee/(M_PI*rayon_influence*rayon_influence); //metttre cette ligne en commentaire pour avoir la version précédente de la fonction
+
+    free(coord);free(coord_temporaire);free(liste_cellules);free(liste_cellules2);
+    return(d);
+}
+
+float* Ensemble::densite(Ensemble* f){
+    
+    float* dens=(float*)malloc(nombre_de_particules*sizeof(float));
+    
+    //#pragma omp parallel for
+    for(unsigned int i=0;i<nombre_de_particules;i++){
+        
+        dens[i]=densite_ponctuelle_visee(data[i].x_predit,data[i].y_predit,f);
+        
+    }
+    
+    return(dens);
+}
+
+void interaction(Ensemble* l1,Ensemble* l2){
+
+    
+    
+    
+    #pragma omp parallel for
+    for(unsigned int i=0; i<(*l1).nombre_de_particules;i++){
+        (*l1).data[i].x_predit = (*l1).data[i].x+(*l1).data[i].vx*pow(10,-5);
+        (*l1).data[i].y_predit = (*l1).data[i].y+(*l1).data[i].vy*pow(10,-5);
+    }
+    for(unsigned int i=0; i<(*l2).nombre_de_particules;i++){
+        (*l2).data[i].x_predit = (*l2).data[i].x;//+(*l2).data[i].vx*pow(10,-5);
+        (*l2).data[i].y_predit = (*l2).data[i].y;//+(*l2).data[i].vy*pow(10,-5);
+    }
+    
+    (*l1).actualise_listes();
+    (*l2).actualise_listes();
+    
+    float* d1 = (*l1).densite(l2);
+    float* d2 = (*l2).densite(l1);
+
+    (*l2).addforce2(d2,l1,d1);
+    (*l1).addforce2(d1,l2,d2);
+
+    (*l1).deplacement();
+    (*l2).deplacement();
+
+    free(d1);
+    free(d2);
+        
+    
+
+}
+
+void Ensemble::addforce2(float* d1,Ensemble* l2,float* d2){
+     #pragma omp parallel
+    {
+        #pragma omp sections
+        {
+            #pragma omp section
+            {
+                gravite();
+            }
+            #pragma omp section
+            {
+                force_pression(l2,d1,d2);
+            }
+            #pragma omp section
+            {
+                force_pression_proche(l2,d1,d2);
+            }
+            #pragma omp section
+            {
+                visc(l2,d1);
+            }
+            #pragma omp section
+            {
+                force_souris();
+            }
+        }
+    }
+
+}
+
+
+
+
+
+void Ensemble::pression_ponctuelle(unsigned int n,  float* pression,Ensemble* l2, float* d1, float* d2){
+    pression[0]=0;
+    pression[1]=0;
+    int* coord = coordonnee(data[n].x,data[n].y,rayon_influence);
+    int* coord_temporaire = (int*)malloc(2*sizeof(int));            
+    int* liste_cellules = (int*)malloc(9*sizeof(int));
+    int* liste_cellules2 = (int*)malloc(9*sizeof(int));
+    for(int i=0;i<9;i++){
+        coord_temporaire[0]=coord[0]-1+i%3;
+        coord_temporaire[1]=coord[1]-1+i/3;
+        liste_cellules[i] = cle(coord_temporaire,nombre_de_particules);
+        liste_cellules2[i] = cle(coord_temporaire,(*l2).nombre_de_particules);
+
+    } //pression de 1 avec 1
+    #pragma omp parallel for
+    for(unsigned int i=0;i<9;i++){
+        int j=indice_debut[liste_cellules[i]];
+        if (j>=0) {
+            while(indices[j][1]==indices[indice_debut[liste_cellules[i]]][1]){
+                unsigned int m=indices[j][0];
+                if (m!=n) {
+                    float distance = sqrt((data[n].x-data[m].x_predit)*(data[n].x-data[m].x_predit)+(data[n].y-data[m].y_predit)*(data[n].y-data[m].y_predit));
+                    if (distance == 0) {
+                        float d=0.001/RAND_MAX;
+                        float x =(-0.5+std::rand())*d+0.0000001;
+                        float y =(-0.5+std::rand())*d+0.0000001;
+                        distance = sqrt(x*x+y*y); 
+                        float dirx = x/distance;
+                        float diry = y/distance;
+                        float grad_influence = data[m].grad_influence(data[m].x+x,data[m].y+y,rayon_influence);
+                        float pression_mutuelle;
+                        pression_mutuelle = ((-d1[m]+densite_visee)+(-d1[n]+densite_visee))/2.0*multiplicateur_pression;
+                        pression[0]+=(pression_mutuelle*grad_influence*dirx/d1[m]);
+                        pression[1]+=(pression_mutuelle*grad_influence*diry/d1[m]);
+                        }
+                    else {
+                        float dirx = (data[n].x-data[m].x_predit)/distance;
+                        float diry = (data[n].y-data[m].y_predit)/distance;
+                        float grad_influence = data[m].grad_influence(data[n].x,data[n].y,rayon_influence);
+                        float pression_mutuelle;
+                        pression_mutuelle = ((-d1[m]+densite_visee)+(-d1[n]+densite_visee))/2.0*multiplicateur_pression;
+                        pression[0]+=(pression_mutuelle*grad_influence*dirx/d1[m]);
+                        pression[1]+=(pression_mutuelle*grad_influence*diry/d1[m]);
+                    }
+         
+                }
+                j++;
+                if ((unsigned int)j==nombre_de_particules){
+                    break;
+                }
+            }
+        }
+    } //Pression de 1 avec 2 (*l2).
+    #pragma omp parallel for
+    for(unsigned int i=0;i<9;i++){
+        int j=(*l2).indice_debut[liste_cellules2[i]];
+        if (j>=0) {
+            while((*l2).indices[j][1]==(*l2).indices[(*l2).indice_debut[liste_cellules2[i]]][1]){
+                unsigned int m=(*l2).indices[j][0];
+                if (m!=n) {
+                    float distance = sqrt((data[n].x-(*l2).data[m].x_predit)*(data[n].x-(*l2).data[m].x_predit)+(data[n].y-(*l2).data[m].y_predit)*(data[n].y-(*l2).data[m].y_predit));
+                    if (distance == 0) {
+                        float d=0.001/RAND_MAX;
+                        float x =(-0.5+std::rand())*d+0.0000001;
+                        float y =(-0.5+std::rand())*d+0.0000001;
+                        distance = sqrt(x*x+y*y); 
+                        float dirx = x/distance;
+                        float diry = y/distance;
+                        float grad_influence = (*l2).data[m].grad_influence(data[n].x+x,data[n].y+y,rayon_influence);
+                        float pression_mutuelle;
+                        pression_mutuelle = ((-d2[m])+(-d1[n]))/2.0*multiplicateur_pression; // changer la constante par un multiplicateur de pression d'interaction ?
+                        pression[0]+=(pression_mutuelle*grad_influence*dirx/d2[m]);
+                        pression[1]+=(pression_mutuelle*grad_influence*diry/d2[m]);
+                        }
+                    else {
+                        float dirx = (data[n].x-(*l2).data[m].x_predit)/distance;
+                        float diry = (data[n].y-(*l2).data[m].y_predit)/distance;
+                        float grad_influence = (*l2).data[m].grad_influence(data[n].x,data[n].y,rayon_influence);
+                        float pression_mutuelle;
+                        pression_mutuelle = ((-d2[m])+(-d1[n]))/2.0*multiplicateur_pression;
+                        pression[0]+=(pression_mutuelle*grad_influence*dirx/d2[m]);
+                        pression[1]+=(pression_mutuelle*grad_influence*diry/d2[m]);
+                    }
+         
+                }
+                j++;
+                if ((unsigned int)j==(*l2).nombre_de_particules){
+                    break;
+                }
+            }
+        }
+    }
+    free(coord);free(coord_temporaire);free(liste_cellules);free(liste_cellules2);
+}
+
+void Ensemble::force_pression(Ensemble* l2, float* d1, float* d2){
+    float* pression = (float*)malloc(2*sizeof(float));
+    #pragma omp parallel for
+    for(unsigned int i=0; i<nombre_de_particules;i++){
+        pression_ponctuelle(i,pression,l2,d1,d2);
+        data[i].vx+=dt*pression[0]/d1[i];
+        data[i].vy+=dt*pression[1]/d1[i];
+    }
+    free(pression);
+    
+
+}
+
+
+
+
+
+
+void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* pression,Ensemble* l2, float* d1, float* d2){
+    pression[0]=0;
+    pression[1]=0;
+    int* coord = coordonnee(data[n].x,data[n].y,rayon_influence);
+    int* coord_temporaire = (int*)malloc(2*sizeof(int));            
+    int* liste_cellules = (int*)malloc(9*sizeof(int));
+    int* liste_cellules2 = (int*)malloc(9*sizeof(int));
+    for(int i=0;i<9;i++){
+        coord_temporaire[0]=coord[0]-1+i%3;
+        coord_temporaire[1]=coord[1]-1+i/3;
+        liste_cellules[i] = cle(coord_temporaire,nombre_de_particules);
+        liste_cellules2[i] = cle(coord_temporaire,(*l2).nombre_de_particules);
+
+    } //pression de 1 avec 1
+    #pragma omp parallel for
+    for(unsigned int i=0;i<9;i++){
+        int j=indice_debut[liste_cellules[i]];
+        if (j>=0) {
+            while(indices[j][1]==indices[indice_debut[liste_cellules[i]]][1]){
+                unsigned int m=indices[j][0];
+                if (m!=n) {
+                    float distance = sqrt((data[n].x-data[m].x_predit)*(data[n].x-data[m].x_predit)+(data[n].y-data[m].y_predit)*(data[n].y-data[m].y_predit));
+                    if (distance == 0) {
+                        float d=0.001/RAND_MAX;
+                        float x =(-0.5+std::rand())*d+0.0000001;
+                        float y =(-0.5+std::rand())*d+0.0000001;
+                        distance = sqrt(x*x+y*y); 
+                        float dirx = x/distance;
+                        float diry = y/distance;
+                        float grad_influence = data[m].grad_influence_proche(data[m].x+x,data[m].y+y,rayon_influence);
+                        float pression_mutuelle;
+                        pression_mutuelle = ((d1[m])+(d1[n]))/2.0*multiplicateur_pression_proche;
+                        pression[0]+=(pression_mutuelle*grad_influence*dirx/d1[m]);// densit[m] ou densite[n] ??
+                        pression[1]+=(pression_mutuelle*grad_influence*diry/d1[m]);
+                        }
+                    else {
+                        float dirx = (data[n].x-data[m].x_predit)/distance;
+                        float diry = (data[n].y-data[m].y_predit)/distance;
+                        float grad_influence = data[m].grad_influence_proche(data[n].x,data[n].y,rayon_influence);
+                        float pression_mutuelle;
+                        pression_mutuelle = -((d1[m])+(d1[n]))/2.0*multiplicateur_pression_proche;
+                        pression[0]+=(pression_mutuelle*grad_influence*dirx/d1[m]);// densit[m] ou densite[n] ??
+                        pression[1]+=(pression_mutuelle*grad_influence*diry/d1[m]);
+                    }
+         
+                }
+                j++;
+                if ((unsigned int)j==nombre_de_particules){
+                    break;
+                }
+            }
+        }
+    }
+     //Pression de 1 avec 2 (*l2).
+    #pragma omp parallel for
+    for(unsigned int i=0;i<9;i++){
+        int j=(*l2).indice_debut[liste_cellules2[i]];
+        if (j>=0) {
+            while((*l2).indices[j][1]==(*l2).indices[(*l2).indice_debut[liste_cellules2[i]]][1]){
+                unsigned int m=(*l2).indices[j][0];
+                if (m!=n) {
+                    float distance = sqrt((data[n].x-(*l2).data[m].x_predit)*(data[n].x-(*l2).data[m].x_predit)+(data[n].y-(*l2).data[m].y_predit)*(data[n].y-(*l2).data[m].y_predit));
+                    if (distance == 0) {
+                        float d=0.001/RAND_MAX;
+                        float x =(-0.5+std::rand())*d+0.0000001;
+                        float y =(-0.5+std::rand())*d+0.0000001;
+                        distance = sqrt(x*x+y*y); 
+                        float dirx = x/distance;
+                        float diry = y/distance;
+                        float grad_influence = (*l2).data[m].grad_influence_proche(data[n].x+x,data[n].y+y,rayon_influence);
+                        float pression_mutuelle;
+                        pression_mutuelle = -((d2[m])+(d1[n]))/2.0*multiplicateur_pression; // changer la constante par un multiplicateur de pression d'interaction ?
+                        pression[0]+=(pression_mutuelle*grad_influence*dirx/d2[m]);
+                        pression[1]+=(pression_mutuelle*grad_influence*diry/d2[m]);
+                        }
+                    else {
+                        float dirx = (data[n].x-(*l2).data[m].x_predit)/distance;
+                        float diry = (data[n].y-(*l2).data[m].y_predit)/distance;
+                        float grad_influence = -(*l2).data[m].grad_influence_proche(data[n].x,data[n].y,rayon_influence);
+                        float pression_mutuelle;
+                        pression_mutuelle = ((d2[m])+(d1[n]))/2.0*multiplicateur_pression;
+                        pression[0]+=(pression_mutuelle*grad_influence*dirx/d2[m]);
+                        pression[1]+=(pression_mutuelle*grad_influence*diry/d2[m]);
+                    }
+         
+                }
+                j++;
+                if ((unsigned int)j==(*l2).nombre_de_particules){
+                    break;
+                }
+            }
+        }
+    }
+    free(coord);free(coord_temporaire);free(liste_cellules);free(liste_cellules2);
+}
+
+void Ensemble::force_pression_proche(Ensemble* l2, float* d1, float* d2){
+    float* pression = (float*)malloc(2*sizeof(float));
+    #pragma omp parallel for
+    for(unsigned int i=0; i<nombre_de_particules;i++){
+        pression_ponctuelle_proche(i,pression,l2,d1,d2);
+        data[i].vx+=dt*pression[0]/d1[i];
+        data[i].vy+=dt*pression[1]/d1[i];
+    }
+    free(pression);
+    
+
+}
+
+void Ensemble::visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2){
+    visc[0]=0;
+    visc[1]=0;
+    int* coord = coordonnee(data[n].x,data[n].y,rayon_influence);
+    int* coord_temporaire = (int*)malloc(2*sizeof(int));            
+    int* liste_cellules = (int*)malloc(9*sizeof(int));
+    int* liste_cellules2 = (int*)malloc(9*sizeof(int));
+    for(int i=0;i<9;i++){
+        coord_temporaire[0]=coord[0]-1+i%3;
+        coord_temporaire[1]=coord[1]-1+i/3;
+        liste_cellules[i] = cle(coord_temporaire,nombre_de_particules);
+        liste_cellules2[i] = cle(coord_temporaire,(*l2).nombre_de_particules);
+    }
+    
+    #pragma omp parallel for
+    for(unsigned int i=0;i<9;i++){
+        int j=(*l2).indice_debut[liste_cellules2[i]];
+        if (j>=0) {
+            while((*l2).indices[j][1]==(*l2).indices[(*l2).indice_debut[liste_cellules2[i]]][1]){
+                unsigned int m=(*l2).indices[j][0];
+                if (m!=n) {
+                    float infl = (*l2).data[m].influence(data[n].x,data[n].y,rayon_influence);
+                    visc[0] += ((*l2).data[m].vx-data[n].vx)*infl*coeff_viscosite/(rayon_influence*rayon_influence);
+                    visc[1] += ((*l2).data[m].vy-data[n].vy)*infl*coeff_viscosite/(rayon_influence*rayon_influence);
+                    }
+                j++;
+                if ((unsigned int)j==(*l2).nombre_de_particules){
+                    break;
+                }
+            }
+        }
+    }
+    #pragma omp parallel for
+    for(unsigned int i=0;i<9;i++){
+        int j=indice_debut[liste_cellules[i]];
+        if (j>=0) {
+            while(indices[j][1]==indices[indice_debut[liste_cellules[i]]][1]){
+                unsigned int m=indices[j][0];
+                if (m!=n) {
+                    float infl = data[m].influence(data[n].x,data[n].y,rayon_influence);
+                    visc[0] += (data[m].vx-data[n].vx)*infl*coeff_viscosite/(rayon_influence*rayon_influence);
+                    visc[1] += (data[m].vy-data[n].vy)*infl*coeff_viscosite/(rayon_influence*rayon_influence);
+                    }
+                j++;
+                if ((unsigned int)j==nombre_de_particules){
+                    break;
+                }
+            }
+        }
+    }
+    free(coord);free(coord_temporaire);free(liste_cellules);free(liste_cellules2);
+}
+
+
+void Ensemble::visc(Ensemble* l2, float* d1){
+    float* viscosite = (float*)malloc(2*sizeof(float));
+    #pragma omp parallel for
+    for(unsigned int i=0; i<nombre_de_particules;i++){
+        visc_ponctuelle(i,viscosite,l2);
+        data[i].vx += dt*viscosite[0]/d1[i];
+        data[i].vy += dt*viscosite[1]/d1[i];
+    }
+    free(viscosite);
 }

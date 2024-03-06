@@ -9,7 +9,7 @@ class Ensemble {
     Particule* data;
     int** indices;
     int* indice_debut;
-    float rayon_affichage ;
+    float rayon_collision ;
     float g ;
     float masse = 1;
     float multiplicateur_pression ;
@@ -18,7 +18,7 @@ class Ensemble {
     float dt ;
     float rayon_influence ;
     float coeff_amorti;
-    float viscstrength ;
+    float coeff_viscosite ;
     float sourisx;
     float sourisy;
     float rayon_action_clique_gauche ;
@@ -35,7 +35,7 @@ class Ensemble {
     bool pause;
 
 
-    Ensemble (unsigned int nb,float rayon_affichage);
+    Ensemble (unsigned int nb,float rayon_collision);
     ~Ensemble();
     Ensemble (const Ensemble&);
 
@@ -57,12 +57,25 @@ class Ensemble {
     float densite_ponctuelle_visee(float ex, float ey);
     void frottement_paroi(float vx_paroi, float vy_paroi, float xlim_d, float xlim_g, float ylim_h, float ylim_b,float coeff_adherence);
     void addforce(float* densite);
-    void actualise_constantes(float rayon_affichage,float g,float masse,float multiplicateur_pression,float multiplicateur_pression_proche,float densite_visee,float dt,float rayon_influence,float coeff_amorti,float viscstrength,float sourisx,float sourisy,float rayon_action_clique_gauche,float puissance_action_clique_gauche,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool espace);
+    void actualise_constantes(float rayon_collision,float g,float masse,float multiplicateur_pression,float multiplicateur_pression_proche,float densite_visee,float dt,float rayon_influence,float coeff_amorti,float coeff_viscosite,float sourisx,float sourisy,float rayon_action_clique_gauche,float puissance_action_clique_gauche,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool espace);
     void actualise_listes();
+
+    
+    float* densite(Ensemble* f);
+    float densite_ponctuelle_visee(float ex, float ey,Ensemble* f);
+    void pression_ponctuelle(unsigned int n, float* pression,Ensemble* l2, float* d1, float* d2);
+    void force_pression(Ensemble* l2, float* d1, float* d2);
+    void pression_ponctuelle_proche(unsigned int n,  float* pression,Ensemble* l2, float* d1, float* d2);
+    void force_pression_proche(Ensemble* l2, float* d1, float* d2);
+    void visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2);
+    void visc(Ensemble* l2, float* d1);
+    void addforce2(float* d1,Ensemble* l2,float* d2);
    
 };
+void interaction(Ensemble* l1, Ensemble* l2);
 float aire(float rayon, float distance);
 float aire_triangle(float base, float hauteur);
 float maxi(float a,float b);
 int compare(const void* a,const void* b);
+
 #endif
