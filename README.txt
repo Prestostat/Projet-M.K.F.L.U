@@ -1,5 +1,25 @@
-Yo
-Si vous voyez  ce message c'est que je suis pas trop une merde
-mais je sais pas ce que j'aurai réussia à faire
-force a moi
+Projet M.K.F.L.U
+L.DAVID, A.BOURDEAUX,M.CODRON
+
+L'objectif du projet est de simuler un fluide. Le point de vu adopté est de faire une simulation reproduisant des comportements similaires à des fluides et non la création d'une simulation exacte d'un fluide réel.
+
+Nous travaillons dans un environnement linux (ubuntu) utilisons OpenGL, Dear ImGui et OpenMP en plus de la bibliothèque standard. Il convient de les installer pour pouvoir compiler et lancer les programmes (voir les commandes en fin de README).
+
+Il n'y a qu'un makefile à utiliser un une application à lancer (nommée run).
+
+Le projet a l'architecture suivante :
+Un dossier OPENGL contenant les classes relatives à l'implantation de fonctions de base pour OpenGl, ainsi que les Shaders utilisés.
+
+Un dossier Physique contenant les fichiers relatifs aux classes Particule et Ensemble. 
+
+Un fichier main contenant l'initialisation de la simulation, les fonctions ImGui et la fonction main qui lance le programme. Celui ci s'arrête à la fermeture de la fenêtre d'affichage.
+
+Des Dossier contenant une partie des bibliothèques extérieures.
+
+Étapes pour installer les dépendances :
+
+
+
+
+
 
