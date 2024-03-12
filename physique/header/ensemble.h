@@ -65,16 +65,16 @@ class Ensemble {
     
     float* densite(Ensemble* f);
     float densite_ponctuelle_visee(float ex, float ey,Ensemble* f);
-    void pression_ponctuelle(unsigned int n, float* pression,Ensemble* l2, float* d1, float* d2);
-    void force_pression(Ensemble* l2, float* d1, float* d2);
-    void pression_ponctuelle_proche(unsigned int n,  float* pression,Ensemble* l2, float* d1, float* d2);
-    void force_pression_proche(Ensemble* l2, float* d1, float* d2);
-    void visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2);
-    void visc(Ensemble* l2, float* d1);
-    void addforce2(float* d1,Ensemble* l2,float* d2);
+    void pression_ponctuelle(unsigned int n, float* pression,Ensemble* l2, float* d1, float* d2,float pression_mutuelle,float densite_visee_melange);
+    void force_pression(Ensemble* l2, float* d1, float* d2,float pression_mutuelle,float densite_visee_melange);
+    void pression_ponctuelle_proche(unsigned int n,  float* pression,Ensemble* l2, float* d1, float* d2,float pression_proche_melange);
+    void force_pression_proche(Ensemble* l2, float* d1, float* d2,float pression_proche_melange);
+    void visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2,float viscosite_melange);
+    void visc(Ensemble* l2, float* d1,float viscosite_melange);
+    void addforce2(float* d1,Ensemble* l2,float* d2,float pression_melange,float pression_proche_melange,float densite_visee_melange,float viscosite_melange);
    
 };
-void interaction(Ensemble* l1, Ensemble* l2);
+void interaction(Ensemble* l1, Ensemble* l2,float pression_melange,float pression_proche_melange,float densite_visee_melange,float viscosite_melange);
 float aire(float rayon, float distance);
 float aire_triangle(float base, float hauteur);
 float maxi(float a,float b);

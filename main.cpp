@@ -119,8 +119,21 @@ float* coeff_amorti,float* coeff_viscosite,float* coeff_adherence,float* logg,fl
     ImGui::End();
 }
 
-void fenetre_interaction(string name){
-    cout << " A définir " << name << endl;
+void fenetre_interaction(const char* name,float* densite_visee_melange,float* pression_melange, float* logpmel,float* logppmel,float* pression_proche_melange,float* viscosite_melange,float* logviscmel){
+    ImGui::Begin(name);
+    {
+        ImGui::Text(name);
+        ImGui::SliderFloat("densite visée mélange",densite_visee_melange ,0.0 , 5000);
+        ImGui::SliderFloat("log(pression_melange)", logpmel,0.0 ,5.0 );
+        *pression_melange=pow(10,*logpmel);
+        ImGui::SliderFloat("log(pression_proche_melange)", logppmel,0.0 ,5.0 );
+        *pression_proche_melange=pow(10,*logppmel);
+        ImGui::SliderFloat("log(viscosité mélange)", logviscmel,-5.0 ,0 );
+        *viscosite_melange=pow(10,*logviscmel);
+        
+
+    }
+    ImGui::End();
 }
 
 
@@ -130,8 +143,10 @@ int main(){
     unsigned int nombre_de_points =3; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
     unsigned int nombre_de_triangles = nombre_de_points-2;
 
+    bool initial = true;// True tant que la définition des paramètres n'est pas fini
 
-    int resolution_densite = 100; // Change le nombre de "pixel" utilisés pour afficher la densité. Non modifiable durant la simulation
+
+    int resolution_densite = 480; // Change le nombre de "pixel" utilisés pour afficher la densité. Non modifiable durant la simulation
 
     // Options pour ce que l'on souhaite afficher. Modifiable durant la simulation
     bool affiche_densite =false; 
@@ -162,8 +177,8 @@ int main(){
     
     // Paramètres Partagés, modifiable durant la simulation
 
-    float dt =0.0001; // Partagé pour que la simutation reste cohérente, le temps s'écoule pour tout le monde pareil(dans notre modeste modèle)
-    float rayon_influence =0.03; // Partagé pour simplifier les interaction entre particules différentes et simplifier lors de l'utilisation des listes d'indices
+    float dt =0.001; // Partagé pour que la simutation reste cohérente, le temps s'écoule pour tout le monde pareil(dans notre modeste modèle)
+    float rayon_influence =0.1; // Partagé pour simplifier les interaction entre particules différentes et simplifier lors de l'utilisation des listes d'indices
     float vx_boite = 0; // vitesse des bords haut et bas de la boite
     float vy_boite = 0; // vitesse des bords gauch et droit de la boite
 
@@ -171,24 +186,27 @@ int main(){
 
     // Paramètres pour le premier fluide
 
-    unsigned int nombre_de_particules =10; // Non modifiable durant la simulation
-    
+    unsigned int nombre_de_particules =1000; // Non modifiable durant la simulation
+    int nb =nombre_de_particules; // Pour l'initialisation car je n'ai pas trouvé d'équivalent a ImGui::InputInt pour un unsigned int.
+
     // Paramètres modifiables durant la simulation
     float rayon_collision = 0.01; // rayon utilisé pour les collisions avec les parois et les objets. N'intervient pas dans les interactions particulaire. Rayon utilisé pour l'affichage (sans flou)
     float g = 10; // contole la norme de la gravitée. A utiliser pour faire varier les densitées des fluides (A justifier, cf : )
     float masse = 1; // Proportionnel à la masse ajouté par particule, répartie dans le disque de rayon rayon_influence. 
     float multiplicateur_pression = 100; // Force de l'interaction de répulsion/attraction entre 2 particules de même type
     float multiplicateur_pression_proche = 100; // Force de l'interaction de répulsion entre 2 particules de même type a courte distance. Aide à la génération de pseudo-tension de surface
-    float densite_visee = 5; // Densitée à laquelle il n'y à plus de force de pression. (peut encore y avoir de la force de pression proche)
+    float densite_visee = 1000; // Densitée à laquelle il n'y à plus de force de pression. (peut encore y avoir de la force de pression proche)
     float coeff_amorti = 0.9; // coefficient multiplicatif lors du rebond sur un mur
     float coeff_viscosite = 0.01; // coefficient multiplicatif de la force visqueuse entre 2 particules de même type
-    float coeff_adherence = 0.002; // Coefficient d'adhérence à la paroi
+    float coeff_adherence = 0.005; // Coefficient d'adhérence à la paroi
 
 
 
     // Paramètres pour le second fluiden il sera définit si nombre_de_particule2>0
 
     unsigned int nombre_de_particules2 =0;// Non modifiable durant la simulation
+    int nb2 =nombre_de_particules2; // Pour l'initialisation car je n'ai pas trouvé d'équivalent a ImGui::InputInt pour un unsigned int.
+    
     
     // Paramètres modifiables durant la simulation
     float rayon_collision2 = 0.01; // rayon utilisé pour les collisions avec les parois et les objets. N'intervient pas dans les interactions particulaire. Rayon utilisé pour l'affichage (sans flou)
@@ -223,12 +241,14 @@ int main(){
     float logmp2 =log10(multiplicateur_pression2);
     float logmpp2 = log10(multiplicateur_pression_proche2);
     float logvisc2 = log10(coeff_viscosite2);
-    
-    
-    // Initialiqation des deux liquides
 
-    Ensemble fluide = Ensemble(nombre_de_particules,rayon_collision);
-    Ensemble fluide2 = Ensemble(nombre_de_particules2,rayon_collision);
+    float logpmel = log10(pression_melange);
+    float logppmel=log10(pression_proche_melange);
+    float logviscmel=log10(viscosite_melange);
+
+    
+    
+
     
 
     
@@ -304,6 +324,47 @@ int main(){
     
 
 
+    while (initial && (!glfwWindowShouldClose(window)))
+    {
+        /* Render here */
+        renderer.Clear();
+        ImGui_ImplGlfwGL3_NewFrame();
+        //fenetre_ImGui(&rayon_collision,&g, &logg, &multiplicateur_pression, &logmp, &multiplicateur_pression_proche, &logmpp, &densite_visee, &dt,  &logdt, &rayon_influence, &coeff_amorti, &coeff_viscosite, &sourisx, &sourisy, &rayon_action_autour_curseur, &puissance_action_autour_curseur,&sens_action_clique_gauche, &logpacg,&coeff_adherence, &logvc , &vitesse_caracteristique,&opacite,&flou,&affiche_densite, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key,&pause);
+        fenetre_principale("dodo", &sourisx, &sourisy, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key, &dt,
+ &rayon_influence, &vx_boite, &vy_boite, &rayon_action_autour_curseur, &puissance_action_autour_curseur, &sens_action_clique_gauche,
+ &affiche_densite, &flou, &pause_change, &pause, &opacite, &affiche_vitesses_colorees, &vitesse_caracteristique, &logdt, &logpacg, &logvc);
+
+        fenetre_liquide("fluide 1", &rayon_collision, &g, &masse, &multiplicateur_pression, &multiplicateur_pression_proche, &densite_visee,
+ &coeff_amorti, &coeff_viscosite, &coeff_adherence, &logg, &logmp, &logmpp, &logvisc);
+        if (nombre_de_particules2>0){
+            fenetre_liquide("fluide 2", &rayon_collision2, &g2, &masse2, &multiplicateur_pression2, &multiplicateur_pression_proche2, &densite_visee2,
+ &coeff_amorti2, &coeff_viscosite2, &coeff_adherence2, &logg2, &logmp2, &logmpp2, &logvisc2);
+            fenetre_interaction( "mélange", &densite_visee_melange, &pression_melange,  &logpmel, &logppmel, &pression_proche_melange, &viscosite_melange, &logviscmel);
+        }
+        ImGui::Begin("Validation des conditions initiales");
+        {
+            ImGui::InputInt("Nombre de particules 1",&nb);
+            nombre_de_particules = (unsigned int)nb;
+            ImGui::InputInt("Nombre de particules 2",&nb2);
+            nombre_de_particules2 = (unsigned int)nb2;
+        if (ImGui::Button("validation des conditions initiales")){
+            initial=false;}
+        }
+        ImGui::End();
+
+        //Affiche ImGui
+        ImGui::Render();
+        ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+
+        GLCall(glfwSwapBuffers(window));
+        GLCall(glfwPollEvents());
+    }
+
+
+    // Initialiqation des deux liquides
+
+    Ensemble fluide = Ensemble(nombre_de_particules,rayon_collision);
+    Ensemble fluide2 = Ensemble(nombre_de_particules2,rayon_collision);
 
 
     /* Loop until the user closes the window */
@@ -322,6 +383,7 @@ int main(){
         if (nombre_de_particules2>0){
             fenetre_liquide("fluide 2", &rayon_collision2, &g2, &masse2, &multiplicateur_pression2, &multiplicateur_pression_proche2, &densite_visee2,
  &coeff_amorti2, &coeff_viscosite2, &coeff_adherence2, &logg2, &logmp2, &logmpp2, &logvisc2);
+            fenetre_interaction( "mélange", &densite_visee_melange, &pression_melange,  &logpmel, &logppmel, &pression_proche_melange, &viscosite_melange, &logviscmel);
         }
         
         
@@ -338,8 +400,15 @@ int main(){
                 position_carre[5]=-1.0+(i/resolution_densite+1)*pas;
                 position_carre[6]=-1.0+(i%resolution_densite+1)*pas;
                 position_carre[7]=-1.0+(i/resolution_densite+1)*pas;
+                float densité_grille;
+                if (nombre_de_particules2==0){
+                    densité_grille= fluide.densite_ponctuelle_visee(position_carre[0]+pas/2,position_carre[1]+pas/2);
 
-                float densité_grille= fluide.densite_ponctuelle_visee(position_carre[0]+pas/2,position_carre[1]+pas/2,&fluide2);
+                }
+                else {
+                    densité_grille= fluide.densite_ponctuelle_visee(position_carre[0]+pas/2,position_carre[1]+pas/2,&fluide2);
+                }
+                
                 float r=mini(1.0,maxi(0.0,densité_grille/densite_visee -1));
                 float g=mini(0.0,pow(mini(abs(densité_grille/densite_visee),abs(2-densité_grille/densite_visee)),4));
                 float b=maxi(0.0,1-densité_grille/densite_visee);
@@ -431,7 +500,7 @@ int main(){
             else {
                 fluide.actualise_constantes(rayon_collision,g,masse,multiplicateur_pression,multiplicateur_pression_proche,densite_visee,dt,rayon_influence,coeff_amorti,coeff_viscosite,sourisx,sourisy,rayon_action_autour_curseur,puissance_action_autour_curseur,clique_gauche,clique_droit,a_key,z_key,e_key,q_key,s_key,d_key,pause);
                 fluide2.actualise_constantes(rayon_collision2,g2,masse2,multiplicateur_pression2,multiplicateur_pression_proche2,densite_visee2,dt,rayon_influence,coeff_amorti2,coeff_viscosite2,sourisx,sourisy,rayon_action_autour_curseur,puissance_action_autour_curseur,clique_gauche,clique_droit,a_key,z_key,e_key,q_key,s_key,d_key,pause);
-                interaction(&fluide,&fluide2);
+                interaction(&fluide,&fluide2,pression_melange,pression_proche_melange,densite_visee_melange,viscosite_melange);
                 fluide2.frottement_paroi(vx_boite, vy_boite, -1, 1, -1, 1,coeff_adherence);
                 fluide.frottement_paroi(vx_boite, vy_boite, -1, 1, -1, 1,coeff_adherence);
             }
