@@ -14,18 +14,35 @@ using namespace std;
 Ensemble::Ensemble(unsigned int nb,float rayon){
     nombre_de_particules=nb;
     data = new Particule[nb];
-    //Obs.init_Obstacle("carré", 100, 0.8, 0, -0.8, 0, 0);
+    Obs.init_Obstacle("carré", 100, 0.8, 0, 0, 0, 0);
     unsigned int N; // nombre dont le carré est le 1er carré supérieur à nb
     unsigned int temp =0;
     while (temp*temp<nb) {
         temp+=1;
         N=temp;
     }
-    for (unsigned int i=0;i<nb;i++){
+        for (unsigned int i=0;i<nb;i++){ 
+        float a = std::rand()*2.0/RAND_MAX - 1;
+        if ((a + rayon < Obs.xini - Obs.c/2) || (a - rayon > Obs.xini + Obs.c/2)){
+            float b =std::rand()*2.0/RAND_MAX-1;
+            data[i].initialise_particules(a,b,0,0,rayon);
+        }
+        else {
+            float c = std::rand()*(2 - c)/RAND_MAX - (1 + Obs.yini - Obs.c/2);
+            if(c>0){
+                float b =std::rand()*(1 - Obs.yini - Obs.c/2)/RAND_MAX + (Obs.yini + Obs.c/2);
+                data[i].initialise_particules(a,b,0,0,rayon);
+            }
+            else{
+                float b =std::rand()*(-1)*(1 + Obs.yini - Obs.c/2)/RAND_MAX + (Obs.yini - Obs.c/2);
+                data[i].initialise_particules(a,b,0,0,rayon);
+            }
+        }
         //data[i].initialise_particules(-1+1.0/N+(i%N)*2.0/N,-1+1.0/N+(i/N)*2.0/N,0,0,rayon);   //place les particles dans un carré remplissant l'espace de l'écran
-        data[i].initialise_particules(-0.5+0.5/N+(i%N)*1.0/N,-0.5+0.5/N+(i/N)*1.0/N,0,0,rayon); // CARRÉ
-        //data[i].random_initialise_particules(rayon); // RANDOM                                                                                     //(de (-1,-1) à (1,1) dépendant de leur nombre
-    }
+        //data[i].initialise_particules(-0.5+0.5/N+(i%N)*1.0/N,-0.5+0.5/N+(i/N)*1.0/N,0,0,rayon); // CARRÉ  
+        //data[i].random_initialise_particules(rayon, Obs); // RANDOM  
+                                                              //(de (-1,-1) à (1,1) dépendant de leur nombre
+        }
 }
 
 
@@ -118,8 +135,8 @@ void Ensemble::deplacement() {
         data[i].x+=data[i].vx*dt;
         data[i].y+=data[i].vy*dt;
         data[i].collision(coeff_amorti);
+        Obs.collision_obstacle(data,masse,i,false,dt);
     }
-    Obs.collision_obstacle(data,1,nombre_de_particules,true);
 }
 
 void Ensemble::actualise_listes(){

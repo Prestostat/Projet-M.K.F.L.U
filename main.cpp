@@ -66,7 +66,7 @@ bool* affiche_densite,bool* flou,bool* pause_change,bool* pause,float* opacite,b
 
 
 
-        ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x/960.0 -1, io.MousePos.y/960.0 -1);
+        ImGui::Text("Mouse pos: (%g, %g)", 2*io.MousePos.x/960.0 -1,2*io.MousePos.y/960.0 -1);
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::Text("espace : pause "); 
         ImGui::Text("clique droit : met toutes les vitesses à 0 "); 
@@ -144,7 +144,7 @@ int main(){
     unsigned int nombre_de_triangles = nombre_de_points-2;
 
     bool initial = true;// True tant que la définition des paramètres n'est pas fini
-
+    bool placement_obstacle = true;// True tant que le placement des obstacles n'est pas fini
 
     int resolution_densite = 480; // Change le nombre de "pixel" utilisés pour afficher la densité. Non modifiable durant la simulation
 
@@ -330,7 +330,7 @@ int main(){
         renderer.Clear();
         ImGui_ImplGlfwGL3_NewFrame();
         //fenetre_ImGui(&rayon_collision,&g, &logg, &multiplicateur_pression, &logmp, &multiplicateur_pression_proche, &logmpp, &densite_visee, &dt,  &logdt, &rayon_influence, &coeff_amorti, &coeff_viscosite, &sourisx, &sourisy, &rayon_action_autour_curseur, &puissance_action_autour_curseur,&sens_action_clique_gauche, &logpacg,&coeff_adherence, &logvc , &vitesse_caracteristique,&opacite,&flou,&affiche_densite, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key,&pause);
-        fenetre_principale("dodo", &sourisx, &sourisy, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key, &dt,
+        fenetre_principale("principale", &sourisx, &sourisy, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key, &dt,
  &rayon_influence, &vx_boite, &vy_boite, &rayon_action_autour_curseur, &puissance_action_autour_curseur, &sens_action_clique_gauche,
  &affiche_densite, &flou, &pause_change, &pause, &opacite, &affiche_vitesses_colorees, &vitesse_caracteristique, &logdt, &logpacg, &logvc);
 
@@ -360,11 +360,63 @@ int main(){
         GLCall(glfwPollEvents());
     }
 
-
-    // Initialiqation des deux liquides
+     // Initialiqation des deux liquides
 
     Ensemble fluide = Ensemble(nombre_de_particules,rayon_collision);
     Ensemble fluide2 = Ensemble(nombre_de_particules2,rayon_collision);
+
+
+    while (placement_obstacle && (!glfwWindowShouldClose(window)))
+    {
+        /* Render here */
+        renderer.Clear();
+        ImGui_ImplGlfwGL3_NewFrame();
+        //fenetre_ImGui(&rayon_collision,&g, &logg, &multiplicateur_pression, &logmp, &multiplicateur_pression_proche, &logmpp, &densite_visee, &dt,  &logdt, &rayon_influence, &coeff_amorti, &coeff_viscosite, &sourisx, &sourisy, &rayon_action_autour_curseur, &puissance_action_autour_curseur,&sens_action_clique_gauche, &logpacg,&coeff_adherence, &logvc , &vitesse_caracteristique,&opacite,&flou,&affiche_densite, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key,&pause);
+        fenetre_principale("principale", &sourisx, &sourisy, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key, &dt,
+ &rayon_influence, &vx_boite, &vy_boite, &rayon_action_autour_curseur, &puissance_action_autour_curseur, &sens_action_clique_gauche,
+ &affiche_densite, &flou, &pause_change, &pause, &opacite, &affiche_vitesses_colorees, &vitesse_caracteristique, &logdt, &logpacg, &logvc);
+
+        fenetre_liquide("fluide 1", &rayon_collision, &g, &masse, &multiplicateur_pression, &multiplicateur_pression_proche, &densite_visee,
+ &coeff_amorti, &coeff_viscosite, &coeff_adherence, &logg, &logmp, &logmpp, &logvisc);
+        if (nombre_de_particules2>0){
+            fenetre_liquide("fluide 2", &rayon_collision2, &g2, &masse2, &multiplicateur_pression2, &multiplicateur_pression_proche2, &densite_visee2,
+ &coeff_amorti2, &coeff_viscosite2, &coeff_adherence2, &logg2, &logmp2, &logmpp2, &logvisc2);
+            fenetre_interaction( "mélange", &densite_visee_melange, &pression_melange,  &logpmel, &logppmel, &pression_proche_melange, &viscosite_melange, &logviscmel);
+        }
+        ImGui::Begin("placement des obstacles");
+        {
+        ImGuiIO& io = ImGui::GetIO();
+        if (io.KeysDown['O']){
+            fluide.Obs.xini=2*io.MousePos.x/960.0 -1;
+            fluide.Obs.yini=-2*io.MousePos.y/960.0 +1;
+        }
+        fluide.Obs.position_obstacle(position_carre);
+
+        triangle_shader.Bind();
+        triangle_shader.SetUniform4f("u_color",1.0,1,1,1.0f);            
+        VertexArray va;                
+        VertexBuffer vb(position_carre,4*2*sizeof(float));
+        VertexBufferLayout layout;
+        layout.Push<float>(2);
+        va.AddBuffer(vb,layout);
+        IndexBuffer ib(indices_densite,6);
+        renderer.Draw(va,ib,triangle_shader);
+
+        if (ImGui::Button("validation des obstacles")){
+            placement_obstacle=false;}
+        }
+        ImGui::End();
+
+        //Affiche ImGui
+        ImGui::Render();
+        ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+
+        GLCall(glfwSwapBuffers(window));
+        GLCall(glfwPollEvents());
+    }
+
+
+   
 
 
     /* Loop until the user closes the window */
@@ -385,9 +437,34 @@ int main(){
  &coeff_amorti2, &coeff_viscosite2, &coeff_adherence2, &logg2, &logmp2, &logmpp2, &logvisc2);
             fenetre_interaction( "mélange", &densite_visee_melange, &pression_melange,  &logpmel, &logppmel, &pression_proche_melange, &viscosite_melange, &logviscmel);
         }
-        
-        
-        
+
+        ImGui::Begin("placement des obstacles");
+        {
+        ImGuiIO& io = ImGui::GetIO();
+        if (io.KeysDown['O']){
+            fluide.Obs.xini=2*io.MousePos.x/960.0 -1;
+            fluide.Obs.yini=-2*io.MousePos.y/960.0 +1;
+        }
+
+        if (ImGui::Button("validation des obstacles")){
+            placement_obstacle=false;}
+        }
+        ImGui::End();
+
+       
+        fluide.Obs.position_obstacle(position_carre);
+
+        triangle_shader.Bind();
+        triangle_shader.SetUniform4f("u_color",1.0,1,1,1.0f);            
+        VertexArray va;                
+        VertexBuffer vb(position_carre,4*2*sizeof(float));
+        VertexBufferLayout layout;
+        layout.Push<float>(2);
+        va.AddBuffer(vb,layout);
+        IndexBuffer ib(indices_densite,6);
+        renderer.Draw(va,ib,triangle_shader);
+
+
 
         if (affiche_densite){
             float pas =2.0/resolution_densite;
@@ -461,6 +538,7 @@ int main(){
 
         
         for (unsigned int i=0;i<nombre_de_particules2;i++){
+            
             fluide2.data[i].rayon = rayon_collision;
             if (flou){
                 fluide2.data[i].position_particule(nombre_de_points,rayon_influence,position );

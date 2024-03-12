@@ -10,89 +10,125 @@ void Obstacle::init_Obstacle(string nom_obstacle_, float masse_, float coeff_amo
     vx_obs = vx_obs_;
     vy_obs = vy_obs_;
     coeff_amorti_obstacle = coeff_amorti_obstacle_;
-    if (nom_obstacle == "carre"){ // Centré en (xini,yini)
-
-        float* x_obs = (float*)malloc(4*N*sizeof(float));
-        float* y_obs = (float*)malloc(4*N*sizeof(float));
-
-        float c = 0.2; // Taille du carré
-        float eps = c/N;
-
-        // Côté gauche
-        for (unsigned int i; i<N; i++){
-            y_obs[i] = -c/2 + eps*i + yini;
-            x_obs[i] = -c/2 + xini;
-        }
-
-        // Bas
-        for (unsigned int i; i<N; i++){
-            x_obs[i+N] = -c/2 + eps*i + xini;
-            y_obs[i+N] = -c/2 + yini;
-        }
-
-        // Côté droit
-        for (unsigned int i; i<N; i++){
-            y_obs[i+2*N] = -c/2 + eps*i + yini;
-            x_obs[i+2*N] = c/2 + xini;
-        }
-
-        // Haut
-        for (unsigned int i; i<N; i++){
-            x_obs[i+3*N] = -c/2 + eps*i + xini;
-            y_obs[i+3*N] = c/2 + yini;
-        }
-    }
-
 }
 
-void Obstacle::collision_obstacle(Particule* data,float masse_particule, unsigned int nombre_de_particules, bool deplacement_ON_OFF){
+
+void Obstacle::collision_obstacle(Particule* data,float masse_particule, unsigned int m, bool deplacement_ON_OFF,float dt){
+    // APPROX PARTICULE = "petit carré"
     if(nom_obstacle == "carré"){
-        for (unsigned int i;i<nombre_de_particules; i++){
-            if ((data[i].x-data[i].rayon<c/2+xini) && (data[i].x+data[i].rayon>-c/2+xini) && (data[i].y-data[i].rayon<c/2+yini) && (data[i].y+data[i].rayon>-c/2+yini)){
-                
-                if (data[i].x<-c/2 + xini){ //Côté Gauche
-                    data[i].x=1-data[i].rayon-coeff_amorti_obstacle*(data[i].x+data[i].rayon-1);
-                    data[i].vx*=-1*coeff_amorti_obstacle;
+        //Côté Gauche
+        if ((data[m].x < xini - c/2) && (data[m].vx>0)){
+            if ((data[m].y - data[m].rayon < yini + c/2) && (data[m].y + data[m].rayon > yini - c/2) && (data[m].x + data[m].rayon > xini - c/2)){
+                data[m].x = xini - c/2 - data[m].rayon;
+                data[m].vx*=-1*coeff_amorti_obstacle;
 
-                    if (deplacement_ON_OFF){
-                        vx_obs+=data[i].vx*masse_particule/masse;
-                        data[i].vx-=data[i].vx*masse_particule/masse;
-                    }
-                }
-
-                if (data[i].x>c/2 + xini){ //Côté Droit
-                    data[i].x=-1+data[i].rayon+coeff_amorti_obstacle*(-data[i].x+data[i].rayon-1);
-                    data[i].vx*=-1*coeff_amorti_obstacle;
-
-                    if (deplacement_ON_OFF){
-                        vx_obs+=data[i].vx*masse_particule/masse;
-                        data[i].vx-=data[i].vx*masse_particule/masse;
-                    }
-                }
-
-                if (data[i].y<-c/2 + yini){ //Dessous
-                    data[i].y=-1+data[i].rayon+coeff_amorti_obstacle*(-data[i].y+data[i].rayon-1);
-                    data[i].vy*=-1*coeff_amorti_obstacle;
-
-                    if (deplacement_ON_OFF){
-                        vy_obs+=data[i].vy*masse_particule/masse;
-                        data[i].vy-=data[i].vy*masse_particule/masse;
-                    }
-                }
-
-                if (data[i].y>c/2 + yini){ //Dessus
-                    data[i].y=1-data[i].rayon+coeff_amorti_obstacle*(-data[i].y+data[i].rayon-1);
-                    data[i].vy*=-1*coeff_amorti_obstacle;
-
-                    if (deplacement_ON_OFF){
-                        vx_obs+=data[i].vy*masse_particule/masse;
-                        data[i].vy-=data[i].vy*masse_particule/masse;
-                    }
+                if (deplacement_ON_OFF){
+                    // on pourrai améliorer en calculant l'angle de collision
+                    // terme en (1-coeff_amorti_obstacle)*data[m].vx ou (1-coeff_amorti_obstacle)*data[m].vx*masse_particule/masse pour conservation d'énergie ça serait pas mal ? à moins que 1 - coeff_amorti_obstacle = masse_particule/masse 
+                    vx_obs += data[m].vx*masse_particule/masse;
+                    data[m].vx -= data[m].vx*masse_particule/masse;
                 }
             }
-            /*if(){ // à voir les conditions aux coins si ça marche ou pas
 
-            }*/
+            else if (((data[m].y + data[m].vy*dt) - data[m].rayon < yini + c/2) && ((data[m].y + data[m].vy*dt) + data[m].rayon > yini - c/2) && ((data[m].x + data[m].vx*dt) + data[m].rayon > xini - c/2)){
+                    data[m].y = data[m].y + data[m].vy*dt + data[m].vy*(xini - c/2 - data[m].x - data[m].vx*dt)/data[m].vx;
+                    data[m].x = xini - c/2 - data[m].rayon;
+                    data[m].vx*=-1*coeff_amorti_obstacle;
+
+                    if (deplacement_ON_OFF){
+                        // on pourrai améliorer en calculant l'angle de collision
+                        // terme en (1-coeff_amorti_obstacle)*data[m].vx ou (1-coeff_amorti_obstacle)*data[m].vx*masse_particule/masse pour conservation d'énergie ça serait pas mal ? à moins que 1 - coeff_amorti_obstacle = masse_particule/masse 
+                        vx_obs += data[m].vx*masse_particule/masse;
+                        data[m].vx -= data[m].vx*masse_particule/masse;
+                    }
+            }
         }
+
+        //Côté Droit
+        if ((data[m].x > xini + c/2) && (data[m].vx<0)){
+            if ((data[m].x - data[m].rayon < xini + c/2) && (data[m].y - data[m].rayon < yini + c/2) && (data[m].y + data[m].rayon > yini - c/2)){
+                data[m].x = xini + c/2 + data[m].rayon;
+                data[m].vx *= -1*coeff_amorti_obstacle;
+
+                if (deplacement_ON_OFF){
+                    vx_obs+=data[m].vx*masse_particule/masse;
+                    data[m].vx-=data[m].vx*masse_particule/masse;
+                }
+            }
+            else if (((data[m].x + data[m].vx*dt) - data[m].rayon < xini + c/2) && ((data[m].y + data[m].vy*dt) - data[m].rayon < yini + c/2) && ((data[m].y + data[m].vy*dt) + data[m].rayon > yini - c/2)){
+                    data[m].y = data[m].y + data[m].vy*dt + data[m].vy*(xini + c/2 - data[m].x - data[m].vx*dt)/data[m].vx;
+                    data[m].x = xini + c/2 + data[m].rayon;
+                    data[m].vx*=-1*coeff_amorti_obstacle;
+
+                    if (deplacement_ON_OFF){
+                        vx_obs+=data[m].vx*masse_particule/masse;
+                        data[m].vx-=data[m].vx*masse_particule/masse;
+                    }
+            }
+        }
+            
+        //Dessous
+        if((data[m].y < yini - c/2) && (data[m].vy>0)){
+            if ((data[m].y + data[m].rayon > yini - c/2) && (data[m].x - data[m].rayon < xini + c/2) && (data[m].x + data[m].rayon > xini - c/2)){
+                data[m].y = yini - c/2 - data[m].rayon;
+                data[m].vy *= -1*coeff_amorti_obstacle;
+
+                if (deplacement_ON_OFF){
+                    vy_obs+=data[m].vy*masse_particule/masse;
+                    data[m].vy-=data[m].vy*masse_particule/masse;
+                }
+            }
+            else if (((data[m].y + data[m].vy*dt) + data[m].rayon > yini - c/2) && ((data[m].x + data[m].vx*dt) - data[m].rayon < xini + c/2) && ((data[m].x + data[m].vx*dt) + data[m].rayon > xini - c/2)){
+                data[m].x = data[m].x + data[m].vx*dt + data[m].vx*(yini - c/2 - data[m].y - data[m].vy*dt)/data[m].vy;
+                data[m].y = yini - c/2 - data[m].rayon;
+                data[m].vy *= -1*coeff_amorti_obstacle;
+
+                if (deplacement_ON_OFF){
+                    vy_obs+=data[m].vy*masse_particule/masse;
+                    data[m].vy-=data[m].vy*masse_particule/masse;
+                }
+            }
+
+        }
+
+        //Dessus
+        if((data[m].y > yini + c/2) && (data[m].vy<0)){
+            if ((data[m].y - data[m].rayon < yini + c/2) && (data[m].x - data[m].rayon < xini + c/2) && (data[m].x + data[m].rayon > xini - c/2)){
+                data[m].y = yini + c/2 + data[m].rayon;
+                data[m].vy *= -1*coeff_amorti_obstacle;
+
+                if (deplacement_ON_OFF){
+                    vx_obs+=data[m].vy*masse_particule/masse;
+                    data[m].vy-=data[m].vy*masse_particule/masse;
+                }
+            }
+            else if (((data[m].y + data[m].vy*dt) - data[m].rayon < yini + c/2) && ((data[m].x + data[m].vx*dt) - data[m].rayon < xini + c/2) && ((data[m].x + data[m].vx*dt) + data[m].rayon > xini - c/2)){
+                data[m].x = data[m].x + data[m].vx*dt + data[m].vx*(yini + c/2 - data[m].y - data[m].vy*dt)/data[m].vy;
+                data[m].y = yini + c/2 + data[m].rayon;
+                data[m].vy *= -1*coeff_amorti_obstacle;
+
+                if (deplacement_ON_OFF){
+                    vx_obs+=data[m].vy*masse_particule/masse;
+                    data[m].vy-=data[m].vy*masse_particule/masse;
+                }
+            }
+        }
+        if (deplacement_ON_OFF){
+            yini += dt*vy_obs;
+            xini += dt*vx_obs;
+        }
+    }
+}
+
+void Obstacle::position_obstacle(float* position){
+    if ((string)"carré"==nom_obstacle){
+        position[0]=xini-c/2;
+        position[1]=yini-c/2;
+        position[2]=xini+c/2;
+        position[3]=yini-c/2;
+        position[4]=xini-c/2;
+        position[5]=yini+c/2;
+        position[6]=xini+c/2;
+        position[7]=yini+c/2;
     }
 }

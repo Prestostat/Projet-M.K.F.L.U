@@ -10,7 +10,7 @@ class Obstacle{
     float* y_obs;
     float vx_obs;
     float vy_obs;
-    float c = 0.1;
+    float c = 0.4;
     float xini;
     float yini;
     unsigned int N = 1000;
@@ -20,7 +20,8 @@ class Obstacle{
     bool deplacement_ON_OFF = false;
 
     void init_Obstacle(string nom_obstacle_, float masse_, float coeff_amorti_obstacle_, float xini_, float yini_, float vx_obs_, float vy_obs_);
-    void collision_obstacle(Particule* data, float masse_particule, unsigned int nombre_de_particules, bool deplacement_ON_OFF);
+    void collision_obstacle(Particule* data, float masse_particule, unsigned int m, bool deplacement_ON_OFF, float dt);
+    void position_obstacle(float* position);
 
 };
 #endif
