@@ -113,7 +113,7 @@ float* coeff_amorti,float* coeff_viscosite,float* coeff_adherence,float* logg,fl
         ImGui::SliderFloat("coeff_amorti",coeff_amorti ,0 , 2);
         ImGui::SliderFloat("log(coeff_viscosite)",logvisc ,-4.0 , 2.0);
         *coeff_viscosite=pow(10,*logvisc);
-        ImGui::SliderFloat("coeff_adherence", coeff_adherence,0 ,1000 );
+        ImGui::SliderFloat("coeff_adherence", coeff_adherence,0 ,1 );
     }
     ImGui::End();
 }
@@ -161,8 +161,8 @@ int main(){
     
     // Paramètres Partagés, modifiable durant la simulation
 
-    float dt =0.001; // Partagé pour que la simutation reste cohérente, le temps s'écoule pour tout le monde pareil(dans notre modeste modèle)
-    float rayon_influence =0.1; // Partagé pour simplifier les interaction entre particules différentes et simplifier lors de l'utilisation des listes d'indices
+    float dt =0.0001; // Partagé pour que la simutation reste cohérente, le temps s'écoule pour tout le monde pareil(dans notre modeste modèle)
+    float rayon_influence =0.03; // Partagé pour simplifier les interaction entre particules différentes et simplifier lors de l'utilisation des listes d'indices
     float vx_boite = 0; // vitesse des bords haut et bas de la boite
     float vy_boite = 0; // vitesse des bords gauch et droit de la boite
 
@@ -170,27 +170,27 @@ int main(){
 
     // Paramètres pour le premier fluide
 
-    unsigned int nombre_de_particules =1000; // Non modifiable durant la simulation
+    unsigned int nombre_de_particules =10; // Non modifiable durant la simulation
     
     // Paramètres modifiables durant la simulation
-    float rayon_collision = 0.005; // rayon utilisé pour les collisions avec les parois et les objets. N'intervient pas dans les interactions particulaire. Rayon utilisé pour l'affichage (sans flou)
+    float rayon_collision = 0.01; // rayon utilisé pour les collisions avec les parois et les objets. N'intervient pas dans les interactions particulaire. Rayon utilisé pour l'affichage (sans flou)
     float g = 10; // contole la norme de la gravitée. A utiliser pour faire varier les densitées des fluides (A justifier, cf : )
     float masse = 1; // Proportionnel à la masse ajouté par particule, répartie dans le disque de rayon rayon_influence. 
     float multiplicateur_pression = 100; // Force de l'interaction de répulsion/attraction entre 2 particules de même type
     float multiplicateur_pression_proche = 100; // Force de l'interaction de répulsion entre 2 particules de même type a courte distance. Aide à la génération de pseudo-tension de surface
-    float densite_visee = 1000; // Densitée à laquelle il n'y à plus de force de pression. (peut encore y avoir de la force de pression proche)
+    float densite_visee = 5; // Densitée à laquelle il n'y à plus de force de pression. (peut encore y avoir de la force de pression proche)
     float coeff_amorti = 0.9; // coefficient multiplicatif lors du rebond sur un mur
-    float coeff_viscosite = 0.1; // coefficient multiplicatif de la force visqueuse entre 2 particules de même type
-    float coeff_adherence = 0.05; // Coefficient d'adhérence à la paroi
+    float coeff_viscosite = 0.01; // coefficient multiplicatif de la force visqueuse entre 2 particules de même type
+    float coeff_adherence = 0.002; // Coefficient d'adhérence à la paroi
 
 
 
     // Paramètres pour le second fluiden il sera définit si nombre_de_particule2>0
 
-    unsigned int nombre_de_particules2 =200;// Non modifiable durant la simulation
+    unsigned int nombre_de_particules2 =0;// Non modifiable durant la simulation
     
     // Paramètres modifiables durant la simulation
-    float rayon_collision2 = 0.005; // rayon utilisé pour les collisions avec les parois et les objets. N'intervient pas dans les interactions particulaire. Rayon utilisé pour l'affichage (sans flou)
+    float rayon_collision2 = 0.01; // rayon utilisé pour les collisions avec les parois et les objets. N'intervient pas dans les interactions particulaire. Rayon utilisé pour l'affichage (sans flou)
     float g2 = 10; // contole la norme de la gravitée. A utiliser pour faire varier les densitées des fluides (A justifier, cf : )
     float masse2 = 1; // Proportionnel à la masse ajouté par particule, répartie dans le disque de rayon rayon_influence. 
     float multiplicateur_pression2 = 100; // Force de l'interaction de répulsion/attraction entre 2 particules de même type
@@ -198,7 +198,7 @@ int main(){
     float densite_visee2 = 200; // Densitée à laquelle il n'y à plus de force de pression. (peut encore y avoir de la force de pression proche)
     float coeff_amorti2 = 0.9; // coefficient multiplicatif lors du rebond sur un mur
     float coeff_viscosite2 = 0.1; // coefficient multiplicatif de la force visqueuse entre 2 particules de même type
-    float coeff_adherence2 = 0.05; // Coefficient d'adhérence à la paroi
+    float coeff_adherence2 = 0.005; // Coefficient d'adhérence à la paroi
 
     
     //Paramètres d'interaction entre les 2 fluides

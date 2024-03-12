@@ -1,6 +1,7 @@
 #ifndef ENSEMBLE_H
 #define ENSEMBLE_H
 #include "particule.h"
+#include "obstacle.h"
 
 class Ensemble {
     private:
@@ -34,6 +35,7 @@ class Ensemble {
     bool d_key;
     bool pause;
 
+    Obstacle Obs;
 
     Ensemble (unsigned int nb,float rayon_collision);
     ~Ensemble();
@@ -77,5 +79,6 @@ float aire(float rayon, float distance);
 float aire_triangle(float base, float hauteur);
 float maxi(float a,float b);
 int compare(const void* a,const void* b);
+float influence_paroi(float dst,float rayon_influence,float coeff_adherence);
 
 #endif

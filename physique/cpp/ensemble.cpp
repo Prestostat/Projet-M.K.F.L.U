@@ -1,5 +1,6 @@
 #include "../header/ensemble.h"
 #include "../header/particule.h"
+#include "../header/obstacle.h"
 #include <math.h>
 #include <iostream>
 #include <map>
@@ -13,6 +14,7 @@ using namespace std;
 Ensemble::Ensemble(unsigned int nb,float rayon){
     nombre_de_particules=nb;
     data = new Particule[nb];
+    Obs.init_Obstacle("carré", 100, 0.8, 0, -0.8, 0, 0);
     unsigned int N; // nombre dont le carré est le 1er carré supérieur à nb
     unsigned int temp =0;
     while (temp*temp<nb) {
@@ -21,8 +23,8 @@ Ensemble::Ensemble(unsigned int nb,float rayon){
     }
     for (unsigned int i=0;i<nb;i++){
         //data[i].initialise_particules(-1+1.0/N+(i%N)*2.0/N,-1+1.0/N+(i/N)*2.0/N,0,0,rayon);   //place les particles dans un carré remplissant l'espace de l'écran
-        //data[i].initialise_particules(-0.5+0.5/N+(i%N)*1.0/N,-0.5+0.5/N+(i/N)*1.0/N,0,0,rayon); // CARRÉ
-        data[i].random_initialise_particules(rayon); // RANDOM                                                                                     //(de (-1,-1) à (1,1) dépendant de leur nombre
+        data[i].initialise_particules(-0.5+0.5/N+(i%N)*1.0/N,-0.5+0.5/N+(i/N)*1.0/N,0,0,rayon); // CARRÉ
+        //data[i].random_initialise_particules(rayon); // RANDOM                                                                                     //(de (-1,-1) à (1,1) dépendant de leur nombre
     }
 }
 
@@ -117,6 +119,7 @@ void Ensemble::deplacement() {
         data[i].y+=data[i].vy*dt;
         data[i].collision(coeff_amorti);
     }
+    Obs.collision_obstacle(data,1,nombre_de_particules,true);
 }
 
 void Ensemble::actualise_listes(){
@@ -273,19 +276,26 @@ void Ensemble::frottement_paroi(float vx_paroi, float vy_paroi, float xlim_d, fl
     //(v-v_paroi).n = 0
     for(unsigned int i = 0; i<nombre_de_particules; i++){
 
+
     if ((data[i].x-rayon_influence)<xlim_d){
-        data[i].vy = vy_paroi+(data[i].vy-vy_paroi)*pow((data[i].x-xlim_d)/(rayon_influence),2);
+        data[i].vy += (vy_paroi-data[i].vy)*influence_paroi(data[i].x-xlim_d,rayon_influence,coeff_adherence);
     }
     if ((data[i].x+rayon_influence)>xlim_g){
-        data[i].vy = vy_paroi+(data[i].vx-vy_paroi)*pow((data[i].x-xlim_g)/(rayon_influence),2);
+        data[i].vy += (vy_paroi-data[i].vy)*influence_paroi(data[i].x-xlim_g,rayon_influence,coeff_adherence);
     }
     if ((data[i].y-rayon_influence)<ylim_h){
-        data[i].vx = vx_paroi+(data[i].vx-vx_paroi)*pow((data[i].y-ylim_h)/(rayon_influence),2);
+        data[i].vx += (vx_paroi-data[i].vx)*influence_paroi(data[i].y-ylim_h,rayon_influence,coeff_adherence);
     }
     if ((data[i].y+rayon_influence)>ylim_b){
-        data[i].vx = vx_paroi+(data[i].vx-vx_paroi)*pow((data[i].y-ylim_b)/(rayon_influence),2);
+        data[i].vx += (vx_paroi-data[i].vx)*influence_paroi(data[i].y-ylim_b,rayon_influence,coeff_adherence);
     }
     }
+}
+
+
+float influence_paroi(float dst,float rayon_influence, float coeff_adherence){
+    float f=coeff_adherence*(1-pow(dst/rayon_influence,2));// A normaliser pour que la force totale ne dépende que du coeff(comme la densite)
+    return(f);
 }
 
 void Ensemble::pression_ponctuelle(unsigned int n,  float* densite,float* pression){
