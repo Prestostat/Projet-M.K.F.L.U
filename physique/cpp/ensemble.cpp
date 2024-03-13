@@ -169,9 +169,6 @@ int** Ensemble::liste_indice() {
         liste[i] = (int*)malloc(2*sizeof(int));
         liste[i][0] = (int)i;
         liste[i][1]= data[i].cle(rayon_influence,nombre_de_particules);
-        if (nombre_de_particules==500){
-            
-        }
     }
     return(liste);
 }
@@ -426,27 +423,70 @@ void interaction(Ensemble* l1,Ensemble* l2,float pression_melange,float pression
         (*l2).data[i].x_predit = (*l2).data[i].x;//+(*l2).data[i].vx*pow(10,-5);
         (*l2).data[i].y_predit = (*l2).data[i].y;//+(*l2).data[i].vy*pow(10,-5);
     }
-
-    (*l1).actualise_listes();
-    (*l2).actualise_listes();
-
-    float* d1 = (*l1).densite(l2);
+    #pragma omp parallel
+    {
+        #pragma omp sections
+        {
+            #pragma omp section
+            {
+                (*l1).actualise_listes();
+            }
+            #pragma omp section
+            {
+                (*l2).actualise_listes();
+            }
+        }
+    }
     float* d2;
-    if ((*l2).nombre_de_particules>0){
-        d2 = (*l2).densite(l1);
+    float* d1;
+    #pragma omp parallel
+    {
+        #pragma omp sections
+        {
+            #pragma omp section
+            {
+                d1 = (*l1).densite(l2);
+            }
+            #pragma omp section
+            {
+                if ((*l2).nombre_de_particules>0){
+                    d2 = (*l2).densite(l1);
+                }
+            }
+        }
     }
-
-    (*l1).addforce2(d1,l2,d2,pression_melange,pression_proche_melange,densite_visee_melange,viscosite_melange);
-   
-    if ((*l2).nombre_de_particules>0){
-        (*l2).addforce2(d2,l1,d1,pression_melange,pression_proche_melange,densite_visee_melange,viscosite_melange);
+    #pragma omp parallel
+    {
+        #pragma omp sections
+        {
+            #pragma omp section
+            {
+                (*l1).addforce2(d1,l2,d2,pression_melange,pression_proche_melange,densite_visee_melange,viscosite_melange);
+            }
+            #pragma omp section
+            {
+                if ((*l2).nombre_de_particules>0){
+                    (*l2).addforce2(d2,l1,d1,pression_melange,pression_proche_melange,densite_visee_melange,viscosite_melange);
+                }
+            }
+        }
     }
-
-    (*l1).deplacement();
-    if ((*l2).nombre_de_particules>0){
-        (*l2).deplacement();
+    #pragma omp parallel
+    {
+        #pragma omp sections
+        {
+            #pragma omp section
+            {
+                (*l1).deplacement();
+            }
+            #pragma omp section
+            {
+                if ((*l2).nombre_de_particules>0){
+                    (*l2).deplacement();
+                }
+            }
+        }
     }
-    
     free(d1);
     if ((*l2).nombre_de_particules>0){
         free(d2);
@@ -727,8 +767,8 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2,float vis
                 unsigned int m=indices[j][0];
                 if (m!=n) {
                     float infl = data[m].influence(data[n].x,data[n].y,rayon_influence);
-                    visc[0] += (data[m].vx-data[n].vx)*infl*viscosite_melange/(rayon_influence*rayon_influence);
-                    visc[1] += (data[m].vy-data[n].vy)*infl*viscosite_melange/(rayon_influence*rayon_influence);
+                    visc[0] += (data[m].vx-data[n].vx)*infl*coeff_viscosite/(rayon_influence*rayon_influence);
+                    visc[1] += (data[m].vy-data[n].vy)*infl*coeff_viscosite/(rayon_influence*rayon_influence);
                     }
                 j++;
                 if ((unsigned int)j==nombre_de_particules){

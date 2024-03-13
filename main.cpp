@@ -145,7 +145,7 @@ int main(){
 
     bool initial = true;// True tant que la définition des paramètres n'est pas fini
 
-    int resolution_densite = 480; // Change le nombre de "pixel" utilisés pour afficher la densité. Non modifiable durant la simulation
+    int resolution_densite = 240; // Change le nombre de "pixel" utilisés pour afficher la densité. Non modifiable durant la simulation
 
     // Options pour ce que l'on souhaite afficher. Modifiable durant la simulation
     bool affiche_densite =false; 
@@ -176,7 +176,7 @@ int main(){
     
     // Paramètres Partagés, modifiable durant la simulation
 
-    float dt =0.001; // Partagé pour que la simutation reste cohérente, le temps s'écoule pour tout le monde pareil(dans notre modeste modèle)
+    float dt =0.005; // Partagé pour que la simutation reste cohérente, le temps s'écoule pour tout le monde pareil(dans notre modeste modèle)
     float rayon_influence =0.1; // Partagé pour simplifier les interaction entre particules différentes et simplifier lors de l'utilisation des listes d'indices
     float vx_boite = 0; // vitesse des bords haut et bas de la boite
     float vy_boite = 0; // vitesse des bords gauch et droit de la boite
@@ -193,10 +193,10 @@ int main(){
     float g = 10; // contole la norme de la gravitée. A utiliser pour faire varier les densitées des fluides (A justifier, cf : )
     float masse = 1; // Proportionnel à la masse ajouté par particule, répartie dans le disque de rayon rayon_influence. 
     float multiplicateur_pression = 100; // Force de l'interaction de répulsion/attraction entre 2 particules de même type
-    float multiplicateur_pression_proche = 100; // Force de l'interaction de répulsion entre 2 particules de même type a courte distance. Aide à la génération de pseudo-tension de surface
+    float multiplicateur_pression_proche = 1000; // Force de l'interaction de répulsion entre 2 particules de même type a courte distance. Aide à la génération de pseudo-tension de surface
     float densite_visee = 1000; // Densitée à laquelle il n'y à plus de force de pression. (peut encore y avoir de la force de pression proche)
     float coeff_amorti = 0.9; // coefficient multiplicatif lors du rebond sur un mur
-    float coeff_viscosite = 0.01; // coefficient multiplicatif de la force visqueuse entre 2 particules de même type
+    float coeff_viscosite = 0.1; // coefficient multiplicatif de la force visqueuse entre 2 particules de même type
     float coeff_adherence = 0.005; // Coefficient d'adhérence à la paroi
 
 
@@ -212,7 +212,7 @@ int main(){
     float g2 = 10; // contole la norme de la gravitée. A utiliser pour faire varier les densitées des fluides (A justifier, cf : )
     float masse2 = 1; // Proportionnel à la masse ajouté par particule, répartie dans le disque de rayon rayon_influence. 
     float multiplicateur_pression2 = 100; // Force de l'interaction de répulsion/attraction entre 2 particules de même type
-    float multiplicateur_pression_proche2 = 100; // Force de l'interaction de répulsion entre 2 particules de même type a courte distance. Aide à la génération de pseudo-tension de surface
+    float multiplicateur_pression_proche2 = 1000; // Force de l'interaction de répulsion entre 2 particules de même type a courte distance. Aide à la génération de pseudo-tension de surface
     float densite_visee2 = 200; // Densitée à laquelle il n'y à plus de force de pression. (peut encore y avoir de la force de pression proche)
     float coeff_amorti2 = 0.9; // coefficient multiplicatif lors du rebond sur un mur
     float coeff_viscosite2 = 0.1; // coefficient multiplicatif de la force visqueuse entre 2 particules de même type
@@ -220,8 +220,8 @@ int main(){
 
     
     //Paramètres d'interaction entre les 2 fluides
-    float pression_melange =1;
-    float pression_proche_melange =1;
+    float pression_melange =100;
+    float pression_proche_melange =1000;
     float viscosite_melange=1;
     float densite_visee_melange=1;
 
