@@ -16,10 +16,15 @@ Un fichier main contenant l'initialisation de la simulation, les fonctions ImGui
 
 Des Dossier contenant une partie des bibliothèques extérieures.
 
-Étapes pour installer les dépendances :
+Étapes pour installer les dépendances (glfw et dlew pour OpenGL)
 
 
+sudo apt-get install libglfw3
+sudo apt-get install libglfw3-dev
+sudo apt-get install libglew-dev
 
+Installer de quoi utiliser le Makefile
 
-
-
+sudo apt-get -y install cmake
+sudo apt install libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules
+sudo apt install xorg-dev

@@ -62,7 +62,7 @@ class Ensemble {
     void actualise_constantes(float rayon_collision,float g,float masse,float multiplicateur_pression,float multiplicateur_pression_proche,float densite_visee,float dt,float rayon_influence,float coeff_amorti,float coeff_viscosite,float sourisx,float sourisy,float rayon_action_clique_gauche,float puissance_action_clique_gauche,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool espace);
     void actualise_listes();
 
-    
+    void rempli_listes(Ensemble* f,int* coord, int* liste_cellules,int* liste_cellules2);
     float* densite(Ensemble* f);
     float densite_ponctuelle_visee(float ex, float ey,Ensemble* f);
     void pression_ponctuelle(unsigned int n, float* pression,Ensemble* l2, float* d1, float* d2,float pression_mutuelle,float densite_visee_melange);

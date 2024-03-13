@@ -110,7 +110,7 @@ float* coeff_amorti,float* coeff_viscosite,float* coeff_adherence,float* logg,fl
         *multiplicateur_pression=pow(10,*logmp);
         ImGui::SliderFloat("log(multiplicateur_pression_proche)", logmpp,0.0 , 10.0);
         *multiplicateur_pression_proche=pow(10,*logmpp);
-        ImGui::SliderFloat("densite_visee", densite_visee,0 ,5000 );
+        ImGui::SliderFloat("densite_visee", densite_visee,0 ,10000 );
         ImGui::SliderFloat("coeff_amorti",coeff_amorti ,0 , 2);
         ImGui::SliderFloat("log(coeff_viscosite)",logvisc ,-4.0 , 2.0);
         *coeff_viscosite=pow(10,*logvisc);
@@ -144,7 +144,6 @@ int main(){
     unsigned int nombre_de_triangles = nombre_de_points-2;
 
     bool initial = true;// True tant que la définition des paramètres n'est pas fini
-    bool placement_obstacle = true;// True tant que le placement des obstacles n'est pas fini
 
     int resolution_densite = 480; // Change le nombre de "pixel" utilisés pour afficher la densité. Non modifiable durant la simulation
 
@@ -366,54 +365,7 @@ int main(){
     Ensemble fluide2 = Ensemble(nombre_de_particules2,rayon_collision);
 
 
-    while (placement_obstacle && (!glfwWindowShouldClose(window)))
-    {
-        /* Render here */
-        renderer.Clear();
-        ImGui_ImplGlfwGL3_NewFrame();
-        //fenetre_ImGui(&rayon_collision,&g, &logg, &multiplicateur_pression, &logmp, &multiplicateur_pression_proche, &logmpp, &densite_visee, &dt,  &logdt, &rayon_influence, &coeff_amorti, &coeff_viscosite, &sourisx, &sourisy, &rayon_action_autour_curseur, &puissance_action_autour_curseur,&sens_action_clique_gauche, &logpacg,&coeff_adherence, &logvc , &vitesse_caracteristique,&opacite,&flou,&affiche_densite, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key,&pause);
-        fenetre_principale("principale", &sourisx, &sourisy, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key, &dt,
- &rayon_influence, &vx_boite, &vy_boite, &rayon_action_autour_curseur, &puissance_action_autour_curseur, &sens_action_clique_gauche,
- &affiche_densite, &flou, &pause_change, &pause, &opacite, &affiche_vitesses_colorees, &vitesse_caracteristique, &logdt, &logpacg, &logvc);
-
-        fenetre_liquide("fluide 1", &rayon_collision, &g, &masse, &multiplicateur_pression, &multiplicateur_pression_proche, &densite_visee,
- &coeff_amorti, &coeff_viscosite, &coeff_adherence, &logg, &logmp, &logmpp, &logvisc);
-        if (nombre_de_particules2>0){
-            fenetre_liquide("fluide 2", &rayon_collision2, &g2, &masse2, &multiplicateur_pression2, &multiplicateur_pression_proche2, &densite_visee2,
- &coeff_amorti2, &coeff_viscosite2, &coeff_adherence2, &logg2, &logmp2, &logmpp2, &logvisc2);
-            fenetre_interaction( "mélange", &densite_visee_melange, &pression_melange,  &logpmel, &logppmel, &pression_proche_melange, &viscosite_melange, &logviscmel);
-        }
-        ImGui::Begin("placement des obstacles");
-        {
-        ImGuiIO& io = ImGui::GetIO();
-        if (io.KeysDown['O']){
-            fluide.Obs.xini=2*io.MousePos.x/960.0 -1;
-            fluide.Obs.yini=-2*io.MousePos.y/960.0 +1;
-        }
-        fluide.Obs.position_obstacle(position_carre);
-
-        triangle_shader.Bind();
-        triangle_shader.SetUniform4f("u_color",1.0,1,1,1.0f);            
-        VertexArray va;                
-        VertexBuffer vb(position_carre,4*2*sizeof(float));
-        VertexBufferLayout layout;
-        layout.Push<float>(2);
-        va.AddBuffer(vb,layout);
-        IndexBuffer ib(indices_densite,6);
-        renderer.Draw(va,ib,triangle_shader);
-
-        if (ImGui::Button("validation des obstacles")){
-            placement_obstacle=false;}
-        }
-        ImGui::End();
-
-        //Affiche ImGui
-        ImGui::Render();
-        ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
-
-        GLCall(glfwSwapBuffers(window));
-        GLCall(glfwPollEvents());
-    }
+   
 
 
    
@@ -437,34 +389,6 @@ int main(){
  &coeff_amorti2, &coeff_viscosite2, &coeff_adherence2, &logg2, &logmp2, &logmpp2, &logvisc2);
             fenetre_interaction( "mélange", &densite_visee_melange, &pression_melange,  &logpmel, &logppmel, &pression_proche_melange, &viscosite_melange, &logviscmel);
         }
-
-        ImGui::Begin("placement des obstacles");
-        {
-        ImGuiIO& io = ImGui::GetIO();
-        if (io.KeysDown['O']){
-            fluide.Obs.xini=2*io.MousePos.x/960.0 -1;
-            fluide.Obs.yini=-2*io.MousePos.y/960.0 +1;
-        }
-
-        if (ImGui::Button("validation des obstacles")){
-            placement_obstacle=false;}
-        }
-        ImGui::End();
-
-       
-        fluide.Obs.position_obstacle(position_carre);
-
-        triangle_shader.Bind();
-        triangle_shader.SetUniform4f("u_color",1.0,1,1,1.0f);            
-        VertexArray va;                
-        VertexBuffer vb(position_carre,4*2*sizeof(float));
-        VertexBufferLayout layout;
-        layout.Push<float>(2);
-        va.AddBuffer(vb,layout);
-        IndexBuffer ib(indices_densite,6);
-        renderer.Draw(va,ib,triangle_shader);
-
-
 
         if (affiche_densite){
             float pas =2.0/resolution_densite;
@@ -568,20 +492,11 @@ int main(){
             renderer.Draw(va,ib,disque_shader);
         }
         if (! pause){
-
-            if (nombre_de_particules2==0) {
-                fluide.actualise_constantes(rayon_collision,g,masse,multiplicateur_pression,multiplicateur_pression_proche,densite_visee,dt,rayon_influence,coeff_amorti,coeff_viscosite,sourisx,sourisy,rayon_action_autour_curseur,puissance_action_autour_curseur,clique_gauche,clique_droit,a_key,z_key,e_key,q_key,s_key,d_key,pause);
-                fluide.evolution();
-                fluide.frottement_paroi(vx_boite, vy_boite, -1, 1, -1, 1,coeff_adherence);
-        
-            }
-            else {
-                fluide.actualise_constantes(rayon_collision,g,masse,multiplicateur_pression,multiplicateur_pression_proche,densite_visee,dt,rayon_influence,coeff_amorti,coeff_viscosite,sourisx,sourisy,rayon_action_autour_curseur,puissance_action_autour_curseur,clique_gauche,clique_droit,a_key,z_key,e_key,q_key,s_key,d_key,pause);
-                fluide2.actualise_constantes(rayon_collision2,g2,masse2,multiplicateur_pression2,multiplicateur_pression_proche2,densite_visee2,dt,rayon_influence,coeff_amorti2,coeff_viscosite2,sourisx,sourisy,rayon_action_autour_curseur,puissance_action_autour_curseur,clique_gauche,clique_droit,a_key,z_key,e_key,q_key,s_key,d_key,pause);
-                interaction(&fluide,&fluide2,pression_melange,pression_proche_melange,densite_visee_melange,viscosite_melange);
-                fluide2.frottement_paroi(vx_boite, vy_boite, -1, 1, -1, 1,coeff_adherence);
-                fluide.frottement_paroi(vx_boite, vy_boite, -1, 1, -1, 1,coeff_adherence);
-            }
+            fluide.actualise_constantes(rayon_collision,g,masse,multiplicateur_pression,multiplicateur_pression_proche,densite_visee,dt,rayon_influence,coeff_amorti,coeff_viscosite,sourisx,sourisy,rayon_action_autour_curseur,puissance_action_autour_curseur,clique_gauche,clique_droit,a_key,z_key,e_key,q_key,s_key,d_key,pause);
+            fluide2.actualise_constantes(rayon_collision2,g2,masse2,multiplicateur_pression2,multiplicateur_pression_proche2,densite_visee2,dt,rayon_influence,coeff_amorti2,coeff_viscosite2,sourisx,sourisy,rayon_action_autour_curseur,puissance_action_autour_curseur,clique_gauche,clique_droit,a_key,z_key,e_key,q_key,s_key,d_key,pause);
+            interaction(&fluide,&fluide2,pression_melange,pression_proche_melange,densite_visee_melange,viscosite_melange);
+            fluide2.frottement_paroi(vx_boite, vy_boite, -1, 1, -1, 1,coeff_adherence);
+            fluide.frottement_paroi(vx_boite, vy_boite, -1, 1, -1, 1,coeff_adherence);
         }
         
         //Affiche ImGui

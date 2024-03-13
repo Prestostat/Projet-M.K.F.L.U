@@ -1,6 +1,7 @@
 #include "../header/obstacle.h"
 #include "../header/particule.h"
 #include <iostream>
+#include <cmath>
 
 void Obstacle::init_Obstacle(string nom_obstacle_, float masse_, float coeff_amorti_obstacle_, float xini_, float yini_, float vx_obs_, float vy_obs_){
     nom_obstacle = nom_obstacle_;
@@ -118,6 +119,8 @@ void Obstacle::collision_obstacle(Particule* data,float masse_particule, unsigne
             xini += dt*vx_obs;
         }
     }
+
+
 }
 
 void Obstacle::position_obstacle(float* position){
