@@ -110,7 +110,7 @@ float* coeff_amorti,float* coeff_viscosite,float* coeff_adherence,float* logg,fl
         *multiplicateur_pression=pow(10,*logmp);
         ImGui::SliderFloat("log(multiplicateur_pression_proche)", logmpp,0.0 , 10.0);
         *multiplicateur_pression_proche=pow(10,*logmpp);
-        ImGui::SliderFloat("densite_visee", densite_visee,0 ,10000 );
+        ImGui::SliderFloat("densite_visee", densite_visee,0 ,20000 );
         ImGui::SliderFloat("coeff_amorti",coeff_amorti ,0 , 2);
         ImGui::SliderFloat("log(coeff_viscosite)",logvisc ,-4.0 , 2.0);
         *coeff_viscosite=pow(10,*logvisc);
@@ -401,14 +401,9 @@ int main(){
                 position_carre[5]=-1.0+(i/resolution_densite+1)*pas;
                 position_carre[6]=-1.0+(i%resolution_densite+1)*pas;
                 position_carre[7]=-1.0+(i/resolution_densite+1)*pas;
-                float densité_grille;
-                if (nombre_de_particules2==0){
-                    densité_grille= fluide.densite_ponctuelle_visee(position_carre[0]+pas/2,position_carre[1]+pas/2);
 
-                }
-                else {
-                    densité_grille= fluide.densite_ponctuelle_visee(position_carre[0]+pas/2,position_carre[1]+pas/2,&fluide2);
-                }
+                float densité_grille= fluide.densite_ponctuelle_visee(position_carre[0]+pas/2,position_carre[1]+pas/2,&fluide2);
+                
                 
                 float r=mini(1.0,maxi(0.0,densité_grille/densite_visee -1));
                 float g=mini(0.0,pow(mini(abs(densité_grille/densite_visee),abs(2-densité_grille/densite_visee)),4));
