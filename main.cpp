@@ -99,7 +99,9 @@ float* coeff_amorti,float* coeff_viscosite,float* coeff_adherence,float* logg,fl
     ImGui::Begin(name);
     {   
         ImGui::Text(name);
-        ImGui::SliderFloat("rayon_collision",rayon_collision ,0.0 , 0.5);
+        //ImGui::SliderFloat("rayon_collision",rayon_collision ,0.0 , 0.5);
+        //ImGui::SameLine();
+        ImGui::InputFloat("rayon_collision",rayon_collision);
         ImGui::SliderFloat("log(g)", logg,0.0 ,10.0 );
         *g=pow(10,*logg);
         if (ImGui::Button("g=0")){
@@ -110,7 +112,9 @@ float* coeff_amorti,float* coeff_viscosite,float* coeff_adherence,float* logg,fl
         *multiplicateur_pression=pow(10,*logmp);
         ImGui::SliderFloat("log(multiplicateur_pression_proche)", logmpp,0.0 , 10.0);
         *multiplicateur_pression_proche=pow(10,*logmpp);
-        ImGui::SliderFloat("densite_visee", densite_visee,0 ,20000 );
+        //ImGui::SliderFloat("densite_visee", densite_visee,0 ,20000 );
+        //ImGui::SameLine();
+        ImGui::InputFloat("densite_visee", densite_visee);
         ImGui::SliderFloat("coeff_amorti",coeff_amorti ,0 , 2);
         ImGui::SliderFloat("log(coeff_viscosite)",logvisc ,-4.0 , 2.0);
         *coeff_viscosite=pow(10,*logvisc);
@@ -123,7 +127,9 @@ void fenetre_interaction(const char* name,float* densite_visee_melange,float* pr
     ImGui::Begin(name);
     {
         ImGui::Text(name);
-        ImGui::SliderFloat("densite visée mélange",densite_visee_melange ,0.0 , 5000);
+        //ImGui::SliderFloat("densite visée mélange",densite_visee_melange ,0.0 , 5000);
+        //ImGui::SameLine();
+        ImGui::InputFloat("densite visée mélange",densite_visee_melange);
         ImGui::SliderFloat("log(pression_melange)", logpmel,0.0 ,5.0 );
         *pression_melange=pow(10,*logpmel);
         ImGui::SliderFloat("log(pression_proche_melange)", logppmel,0.0 ,5.0 );
@@ -222,8 +228,8 @@ int main(){
     //Paramètres d'interaction entre les 2 fluides
     float pression_melange =100;
     float pression_proche_melange =1000;
-    float viscosite_melange=1;
-    float densite_visee_melange=1;
+    float viscosite_melange=0.1;
+    float densite_visee_melange=500;
 
 
     // Variables outils pour changer les paramètres de façons logarithmiques.
@@ -433,8 +439,13 @@ int main(){
             else {
                 fluide.data[i].position_particule(nombre_de_points,rayon_collision,position );
             }
-            
-            clear_color=fluide.data[i].couleur(vitesse_caracteristique);
+
+            if (affiche_vitesses_colorees){
+                clear_color=fluide.data[i].couleur(vitesse_caracteristique); 
+            }
+            else {
+                clear_color[0]=0.2;clear_color[1]=0.7;clear_color[2]=1;
+            }
 
             disque_shader.Bind();
             if (flou){
@@ -465,8 +476,14 @@ int main(){
             else {
                 fluide2.data[i].position_particule(nombre_de_points,rayon_collision,position );
             }
-            
-            clear_color=fluide2.data[i].couleur(vitesse_caracteristique);
+            if (affiche_vitesses_colorees){
+                clear_color=fluide2.data[i].couleur(vitesse_caracteristique); 
+                clear_color[1]=clear_color[2];
+                clear_color[2]=0;
+            }
+            else {
+                clear_color[0]=1;clear_color[1]=1;clear_color[2]=0;
+            }
 
             disque_shader.Bind();
             if (flou){
@@ -476,7 +493,7 @@ int main(){
                 disque_shader.SetUniform4f("information",10000,rayon_collision/2,(fluide2.data[i].x+1)/2,(fluide2.data[i].y+1)/2);
             }
             
-            disque_shader.SetUniform4f("u_color",0,1,0,1.0f);
+            disque_shader.SetUniform4f("u_color",clear_color[0],clear_color[1],clear_color[2],1.0f);
                         
             VertexArray va;                
             VertexBuffer vb(position,nombre_de_points*2*sizeof(float));
