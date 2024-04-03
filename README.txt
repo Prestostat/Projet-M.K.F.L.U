@@ -10,7 +10,7 @@ Il n'y a qu'un makefile à utiliser un une application à lancer (nommée run).
 Le projet a l'architecture suivante :
 Un dossier OPENGL contenant les classes relatives à l'implantation de fonctions de base pour OpenGl, ainsi que les Shaders utilisés.
 
-Un dossier Physique contenant les fichiers relatifs aux classes Particule et Ensemble. 
+Un dossier Physique contenant les fichiers relatifs aux classes Particule et Ensemble et Aux contenat des fonctiosn auxilières. 
 
 Un fichier main contenant l'initialisation de la simulation, les fonctions ImGui et la fonction main qui lance le programme. Celui ci s'arrête à la fermeture de la fenêtre d'affichage.
 
