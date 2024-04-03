@@ -21,14 +21,16 @@ class Particule {
     float influence(float ex,float ey,float rayon_influence);
     float grad_influence(float ex, float ey, float rayon_influence);
     float grad_influence_proche(float ex, float ey, float rayon_influence);
-    int* coordonnee(float rayon_influence);
+    void coordonnee(int* coord, float rayon_influence);
     int cle(float rayon_influence, int nombre_de_particules);
-    float* couleur(float vitesse_caracteristique);
+    void couleur(float* couleur,float vitesse_caracteristique,float opacite,bool affiche_vitesses_colorees);
+    void position_particule_carre(float* position);
+
 
 };
 float fonction_influence(float x,float rayon_influence);
 float derive_fonction_influence(float x, float rayon_influence);
 float derive_fonction_influence_proche(float x, float rayon_influence);
-int* coordonnee(float ex, float ey,float rayon_influence);
+void coordonnee(int* coord,float ex, float ey,float rayon_influence);
 int cle(int* coord, int nombre_de_particules);
 #endif

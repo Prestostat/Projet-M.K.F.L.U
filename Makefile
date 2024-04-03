@@ -1,5 +1,5 @@
 #PARTIE A MODIFIER : Liste des fichiers .cpp (et uniquement les .cpp) à compiler
-SOURCES=main.cpp physique/cpp/ensemble.cpp physique/cpp/particule.cpp physique/cpp/obstacle.cpp OPENGL/cpp/IndexBuffer.cpp OPENGL/cpp/Renderer.cpp OPENGL/cpp/Shader.cpp OPENGL/cpp/VertexArray.cpp OPENGL/cpp/VertexBuffer.cpp OPENGL/src/vendor/imgui/imgui_demo.cpp OPENGL/src/vendor/imgui/imgui_draw.cpp OPENGL/src/vendor/imgui/imgui_impl_glfw_gl3.cpp OPENGL/src/vendor/imgui/imgui.cpp
+SOURCES=main.cpp physique/cpp/ensemble.cpp  physique/cpp/aux.cpp OPENGL/src/vendor/stb_image/stb_image.cpp physique/cpp/particule.cpp physique/cpp/obstacle.cpp OPENGL/cpp/IndexBuffer.cpp OPENGL/cpp/texture.cpp OPENGL/cpp/Renderer.cpp OPENGL/cpp/Shader.cpp OPENGL/cpp/VertexArray.cpp OPENGL/cpp/VertexBuffer.cpp OPENGL/src/vendor/imgui/imgui_demo.cpp OPENGL/src/vendor/imgui/imgui_draw.cpp OPENGL/src/vendor/imgui/imgui_impl_glfw_gl3.cpp OPENGL/src/vendor/imgui/imgui.cpp
 
 #FIN DE LA PARTIE A MODIFIER
 
@@ -8,7 +8,7 @@ CXX=g++
 # Arguments pour l'étape d'édition de liens : tous les avertissements
 LDFLAGS=-Wall -Wextra -lGL -lGLU -lGLEW -lglfw -lX11 -lXxf86vm -lXrandr -lpthread -lXi -ldl -lXinerama -lXcursor -fopenmp
 # Arguments pour l'etape de compilation : tous les avertissements (et même plus) sauf "ignored-attributes" (présence d'un bug dans GCC version 6 et plus)
-CPPFLAGS=-Wall -Wextra -std=c++11 -fopenmp
+CPPFLAGS=-Wall -Wextra -std=c++14 -fopenmp
 # Librairies : none
 LDLIBS= -lGL -lGLU -lGLEW -lglfw -lX11 -lXxf86vm -lXrandr -lpthread -lXi -ldl -lXinerama -lXcursor -fopenmp
 

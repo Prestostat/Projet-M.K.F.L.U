@@ -1,5 +1,6 @@
 #ifndef ENSEMBLE_H
 #define ENSEMBLE_H
+
 #include "particule.h"
 #include "obstacle.h"
 
@@ -43,9 +44,9 @@ class Ensemble {
 
     void gravite();
     void deplacement();
-    int** liste_indice();
+    void liste_indice(int** liste);
     void tri_liste_indice( int** liste );
-    int* liste_indice_debut(int**liste);
+    void liste_indice_debut(int* liste_i ,int** liste);
     void force_souris();
     
     void frottement_paroi(float vx_paroi, float vy_paroi, float xlim_d, float xlim_g, float ylim_h, float ylim_b,float coeff_adherence);
@@ -53,7 +54,7 @@ class Ensemble {
     void actualise_listes();
 
     void rempli_listes(Ensemble* f,int* coord, int* liste_cellules,int* liste_cellules2);
-    float* densite(Ensemble* f);
+    void densite(Ensemble* f,float* d);
     float densite_ponctuelle_visee(float ex, float ey,Ensemble* f);
     void pression_ponctuelle(unsigned int n, float* pression,Ensemble* l2, float* d1, float* d2,float pression_mutuelle,float densite_visee_melange);
     void force_pression(Ensemble* l2, float* d1, float* d2,float pression_mutuelle,float densite_visee_melange);
@@ -62,6 +63,7 @@ class Ensemble {
     void visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2,float viscosite_melange);
     void visc(Ensemble* l2, float* d1,float viscosite_melange);
     void addforce2(float* d1,Ensemble* l2,float* d2,float pression_melange,float pression_proche_melange,float densite_visee_melange,float viscosite_melange);
+    void rempli_info_point(float* ip,float vc,float opacite,bool affiche_vitesses_colorees,float TexID_d,float TexID_f);
    
 };
 void interaction(Ensemble* l1, Ensemble* l2,float pression_melange,float pression_proche_melange,float densite_visee_melange,float viscosite_melange);
@@ -70,5 +72,6 @@ float aire_triangle(float base, float hauteur);
 float maxi(float a,float b);
 int compare(const void* a,const void* b);
 float influence_paroi(float dst,float rayon_influence,float coeff_adherence);
+
 
 #endif

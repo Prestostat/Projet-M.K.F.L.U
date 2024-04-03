@@ -42,6 +42,28 @@ void Particule::position_particule(unsigned int nb_points,float rayon_influence,
         //cout << position [2*i] << " " <<position[2*i+1] << endl;
     }
 }
+void Particule::position_particule_carre(float* position){
+    position[0]=x-rayon;
+    position[1]=y-rayon;
+    position[2]=0;
+    position[3]=0;
+    position[4]=x-rayon;
+    position[5]=y+rayon;
+    position[6]=0;
+    position[7]=1;
+    position[8]=x+rayon;
+    position[9]=y-rayon;
+    position[10]=1;
+    position[11]=0;
+    position[12]=x+rayon;
+    position[13]=y+rayon;
+    position[14]=1;
+    position[15]=1;
+
+
+
+
+}
 
 
 void Particule::collision(float amorti){
@@ -103,30 +125,29 @@ float derive_fonction_influence_proche(float x, float rayon_influence){
 }
 
 
-int* Particule::coordonnee(float rayon_influence){
-    int* coord = (int*)malloc(2*sizeof(int));
+void Particule::coordonnee(int* coord,float rayon_influence){
     coord[0]=(int)(x/rayon_influence);
     coord[1]=(int)(y/rayon_influence);
-    return(coord);
 }
 
 
-int* coordonnee(float ex,float ey,float rayon_influence){
-    int* coord = (int*)malloc(2*sizeof(int));
+void coordonnee(int* coord, float ex,float ey,float rayon_influence){
     coord[0]=(int)(ex/rayon_influence);
     coord[1]=(int)(ey/rayon_influence);
-    return(coord);
 }
 
 
 int Particule::cle(float rayon_influence, int nombre_de_particules){
     int a = 15823;
     int b =9737333;
-    int* coord = coordonnee(rayon_influence);
+    int* coord = (int*)malloc(2*sizeof(int));
+    coordonnee(coord,rayon_influence);
     int temp = (coord[0]*a+coord[1]*b)%nombre_de_particules;
     temp+= nombre_de_particules;
     temp = temp%nombre_de_particules;
+    free(coord);
     return(temp);
+
 }
 
 
@@ -138,11 +159,13 @@ int cle(int* coord, int nombre_de_particules){
     temp = temp%nombre_de_particules;
     return(temp);
 }  
-float* Particule::couleur(float vc){
+void Particule::couleur(float* couleur, float vc,float opacite,bool affiche_vitesses_colorees){
     float v=sqrt(vx*vx+vy*vy);
-    float* couleur=(float*)malloc(3*sizeof(float));
+    
     couleur[1]=0;
-    if (v<vc) {
+    couleur[3]=opacite;
+    if (!affiche_vitesses_colorees){couleur[0]=0;couleur[2]=1;}
+    else if (v<vc) {
         couleur[0]=(v/vc)*(v/vc);
         couleur[2]=1;
     }
@@ -154,5 +177,6 @@ float* Particule::couleur(float vc){
         couleur[0]=1;
         couleur[2]=0;
     }
-    return(couleur);
+    
 }
+

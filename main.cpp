@@ -1,164 +1,55 @@
 #include <iostream>
 #include <fstream>
 #include <math.h>
+#include <thread>
+#include <omp.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+
 #include "///usr/include/GL/glew.h"
 #include <GLFW/glfw3.h>
+
+#include "OPENGL/src/vendor/stb_image/stb_image.h" // bibliothèque permettant d'utiliser facilement des images pour les textures
+#include "OPENGL/src/vendor/glm/glm.hpp" // bibliothèque de maths adapté à OpenGL
+#include "OPENGL/src/vendor/glm/gtc/matrix_transform.hpp"// bibliothèque de maths adapté à OpenGL
+
+#include "OPENGL/src/vendor/imgui/imgui.h" // ImGui
+#include "OPENGL/src/vendor/imgui/imgui_impl_glfw_gl3.h"// ImGui
+
+// Les fichiers ci dessous sont ceux que nous avons fait, avec l'aide du tutoriel OpenGl de The cherno pour les fichier du dossier OPENGL, et inspiration  du travail de Sebastian Lague pour débuter la simulation du fluide
+#include "physique/header/particule.h" 
+#include "physique/header/ensemble.h"
+#include "physique/header/aux.h"
+
 #include "OPENGL/header/Renderer.h"
 #include "OPENGL/header/VertexBuffer.h"
 #include "OPENGL/header/IndexBuffer.h"
 #include "OPENGL/header/VertexArray.h"
 #include "OPENGL/header/Shader.h"
 #include "OPENGL/header/VertexBufferLayout.h"
-#include "physique/header/particule.h"
-#include "physique/header/ensemble.h"
-#include "OPENGL/src/vendor/imgui/imgui.h"
-#include "OPENGL/src/vendor/imgui/imgui_impl_glfw_gl3.h"
-#include <map>
-#include <chrono>
-#include <thread>
-#include <omp.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "OPENGL/header/texture.h"
+
+
 #define PI 3.14159265
 #define E 2.71828182846
 using namespace std;
 
 
-float mini(float a,float b){
-    if(a>b){return(b);}
-    else{return(a);}
-}
-void fenetre_principale(const char* name,float* sourisx,float* sourisy,bool* clique_gauche,bool* clique_droit,bool* a_key,bool* z_key,bool* e_key,bool* q_key,bool* s_key,bool* d_key,float* dt,
-float* rayon_influence,float* vx_boite,float* vy_boite,float* rayon_action_autour_curseur,float* puissance_action_autour_curseur,int* sens_action_clique_gauche,
-bool* affiche_densite,bool* flou,bool* pause_change,bool* pause,float* opacite,bool* affiche_vitesses_colorees,float* vitesse_caracteristique,float* logdt,float* logpacg,float* logvc){
-    ImGui::Begin("fenêtre principale");
-    {   
-        ImGui::Text(name);
-        ImGuiIO& io = ImGui::GetIO();
-        ImGui::SliderFloat("rayon action autour du curseur", (rayon_action_autour_curseur), 0.0f, 0.5f);
-        ImGui::SliderFloat("log(dt)", logdt, -7.0, 0.0f);            
-        *dt=pow(10,*logdt);
-        ImGui::SliderFloat("rayon_influence", rayon_influence, 0.0f, 1.0f);
-        ImGui::SliderFloat("log(forces autour du curseur)", logpacg, 0.0f, 5.0f);
-        *puissance_action_autour_curseur=pow(E,*logpacg)* *sens_action_clique_gauche;
-        ImGui::SliderFloat("opacite", opacite, 0.0f, 100.0f);  
-        ImGui::SliderFloat("log(vitesse_caracteristique)", logvc, -2.0f, 2.0f);
-        *vitesse_caracteristique=pow(E,*logvc);
-        ImGui::SliderFloat("vitesse horizontale de la boite", vx_boite, 0.0f, 1.0f);
-        ImGui::SliderFloat("vitesse verticale de la boite", vy_boite, 0.0f, 1.0f);
-
-
-
-
-        if (ImGui::Button("sens de la force du clique gauche")){
-            *sens_action_clique_gauche*=-1;}
-        ImGui::SameLine();
-        if (ImGui::Button("activer le flou")){
-            *flou = ! *flou;} 
-        ImGui::SameLine();
-        if (ImGui::Button("Voir la densité")){
-            *affiche_densite = ! *affiche_densite;} 
-        ImGui::SameLine();
-        if (ImGui::Button("Voir les vitesses en couleurs")){
-            *affiche_vitesses_colorees = ! *affiche_vitesses_colorees;} 
-
-
-
-
-
-        ImGui::Text("Mouse pos: (%g, %g)", 2*io.MousePos.x/960.0 -1,2*io.MousePos.y/960.0 -1);
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGui::Text("espace : pause "); 
-        ImGui::Text("clique droit : met toutes les vitesses à 0 "); 
-        ImGui::Text("clique gauche : force centrée sur la souris");
-        ImGui::Text("a : attraction centrée sur la souris avec les multiplicateurs du clique gauche");  
-        ImGui::Text("e : répulsion centrée sur la souris avec les multiplicateurs du clique gauche"); 
-        ImGui::Text("z,q,s,d : augmentation de la vitesse du fluide vers le : haut, gauche, bas, droite"); 
-
-
-        *clique_gauche=ImGui::IsMouseClicked(0,true);
-        *clique_droit=ImGui::IsMouseClicked(1,true);
-        *a_key=io.KeysDown['Q']; // attention, c'est en Qwerty dans ImGui donc il y a la convertion a faire ici
-        *z_key=io.KeysDown['W']; 
-        *e_key=io.KeysDown['E'];
-        *q_key=io.KeysDown['A'];
-        *s_key=io.KeysDown['S'];
-        *d_key=io.KeysDown['D'];
-        if (*pause_change != io.KeysDown[' ']) {*pause_change=io.KeysDown[' '];if (! *pause_change){*pause = ! *pause;}}
-    
-
-        *sourisx=io.MousePos.x;
-        *sourisy=io.MousePos.y;
-    }
-    ImGui::End();
-}
-
-
-void fenetre_liquide(const char* name,float* rayon_collision,float* g,float* masse,float* multiplicateur_pression,float* multiplicateur_pression_proche,float* densite_visee,
-float* coeff_amorti,float* coeff_viscosite,float* coeff_adherence,float* logg,float* logmp,float* logmpp,float* logvisc){
-    ImGui::Begin(name);
-    {   
-        ImGui::Text(name);
-        //ImGui::SliderFloat("rayon_collision",rayon_collision ,0.0 , 0.5);
-        //ImGui::SameLine();
-        ImGui::InputFloat("rayon_collision",rayon_collision);
-        ImGui::SliderFloat("log(g)", logg,0.0 ,10.0 );
-        *g=pow(10,*logg);
-        if (ImGui::Button("g=0")){
-            *logg = -100000000;
-            *g=pow(10,*logg);} 
-        ImGui::SliderFloat("masse", masse,0 ,10.0 );
-        ImGui::SliderFloat("log(multiplicateur_pression)", logmp,0.0 , 10.0);
-        *multiplicateur_pression=pow(10,*logmp);
-        ImGui::SliderFloat("log(multiplicateur_pression_proche)", logmpp,0.0 , 10.0);
-        *multiplicateur_pression_proche=pow(10,*logmpp);
-        //ImGui::SliderFloat("densite_visee", densite_visee,0 ,20000 );
-        //ImGui::SameLine();
-        ImGui::InputFloat("densite_visee", densite_visee);
-        ImGui::SliderFloat("coeff_amorti",coeff_amorti ,0 , 2);
-        ImGui::SliderFloat("log(coeff_viscosite)",logvisc ,-4.0 , 2.0);
-        *coeff_viscosite=pow(10,*logvisc);
-        ImGui::SliderFloat("coeff_adherence", coeff_adherence,0 ,1 );
-    }
-    ImGui::End();
-}
-
-void fenetre_interaction(const char* name,float* densite_visee_melange,float* pression_melange, float* logpmel,float* logppmel,float* pression_proche_melange,float* viscosite_melange,float* logviscmel){
-    ImGui::Begin(name);
-    {
-        ImGui::Text(name);
-        //ImGui::SliderFloat("densite visée mélange",densite_visee_melange ,0.0 , 5000);
-        //ImGui::SameLine();
-        ImGui::InputFloat("densite visée mélange",densite_visee_melange);
-        ImGui::SliderFloat("log(pression_melange)", logpmel,0.0 ,5.0 );
-        *pression_melange=pow(10,*logpmel);
-        ImGui::SliderFloat("log(pression_proche_melange)", logppmel,0.0 ,5.0 );
-        *pression_proche_melange=pow(10,*logppmel);
-        ImGui::SliderFloat("log(viscosité mélange)", logviscmel,-5.0 ,0 );
-        *viscosite_melange=pow(10,*logviscmel);
-        
-
-    }
-    ImGui::End();
-}
 
 
 int main(){
-    
-    // Paramètre pour l'affichage de rond avec la méthode "Triangle Fan". Non modifiable durant la simulation
-    unsigned int nombre_de_points =3; // doit être supérieur a 3 (pour au moins avoir 1 triangle)
-    unsigned int nombre_de_triangles = nombre_de_points-2;
 
     bool initial = true;// True tant que la définition des paramètres n'est pas fini
 
-    int resolution_densite = 240; // Change le nombre de "pixel" utilisés pour afficher la densité. Non modifiable durant la simulation
+    int resolution_densite = 960/4; // Change le nombre de "pixel" utilisés pour afficher la densité. Non modifiable durant la simulation
 
     // Options pour ce que l'on souhaite afficher. Modifiable durant la simulation
     bool affiche_densite =false; 
     bool flou = false;
     bool pause=false;
     bool pause_change = false;
-    float opacite = 10; // permet d'influer sur la transparence lorsque le flou est actif. 
+    float opacite = 1; // permet d'influer sur la transparence lorsque le flou est actif. 
     bool affiche_vitesses_colorees = false; // permet de creer un gradient de couleur entre les particules lente et rapide. 
     float vitesse_caracteristique =1; // influe sur l'échelle des vitesses pour l'affichage. 
     //Rouge : v_particule >= 2*vitesse_caracteristique, magenta si v_particule=vitesse_caracteristique, bleu si v_particule=0. 
@@ -182,7 +73,7 @@ int main(){
     
     // Paramètres Partagés, modifiable durant la simulation
 
-    float dt =0.005; // Partagé pour que la simutation reste cohérente, le temps s'écoule pour tout le monde pareil(dans notre modeste modèle)
+    float dt =0.003; // Partagé pour que la simutation reste cohérente, le temps s'écoule pour tout le monde pareil(dans notre modeste modèle)
     float rayon_influence =0.1; // Partagé pour simplifier les interaction entre particules différentes et simplifier lors de l'utilisation des listes d'indices
     float vx_boite = 0; // vitesse des bords haut et bas de la boite
     float vy_boite = 0; // vitesse des bords gauch et droit de la boite
@@ -204,8 +95,8 @@ int main(){
     float coeff_amorti = 0.9; // coefficient multiplicatif lors du rebond sur un mur
     float coeff_viscosite = 0.1; // coefficient multiplicatif de la force visqueuse entre 2 particules de même type
     float coeff_adherence = 0.005; // Coefficient d'adhérence à la paroi
-
-
+    int texture_debut = 0; // utilisation de texture pour le fluide, celles qui sont bind entre texturedebut et texturefin. 0 correspond a aucune texture.
+    int texture_fin = 0;
 
     // Paramètres pour le second fluiden il sera définit si nombre_de_particule2>0
 
@@ -219,17 +110,18 @@ int main(){
     float masse2 = 1; // Proportionnel à la masse ajouté par particule, répartie dans le disque de rayon rayon_influence. 
     float multiplicateur_pression2 = 100; // Force de l'interaction de répulsion/attraction entre 2 particules de même type
     float multiplicateur_pression_proche2 = 1000; // Force de l'interaction de répulsion entre 2 particules de même type a courte distance. Aide à la génération de pseudo-tension de surface
-    float densite_visee2 = 200; // Densitée à laquelle il n'y à plus de force de pression. (peut encore y avoir de la force de pression proche)
+    float densite_visee2 = 1000; // Densitée à laquelle il n'y à plus de force de pression. (peut encore y avoir de la force de pression proche)
     float coeff_amorti2 = 0.9; // coefficient multiplicatif lors du rebond sur un mur
     float coeff_viscosite2 = 0.1; // coefficient multiplicatif de la force visqueuse entre 2 particules de même type
     float coeff_adherence2 = 0.005; // Coefficient d'adhérence à la paroi
-
+    int texture_debut2 = 0; // utilisation de texture pour le fluide, celles qui sont bind entre texturedebut et texturefin. 0 correspond a aucune texture.
+    int texture_fin2 = 0;
     
     //Paramètres d'interaction entre les 2 fluides
     float pression_melange =100;
     float pression_proche_melange =1000;
     float viscosite_melange=0.1;
-    float densite_visee_melange=500;
+    float densite_visee_melange=900;
 
 
     // Variables outils pour changer les paramètres de façons logarithmiques.
@@ -257,8 +149,8 @@ int main(){
     
 
     
-    //Initialisation d'OpenGL pour l'affichage. Utilisation de la série tutoriel de The Cherno pour la création des fichiers initiaux relatifs à OpenGl  l
-    //ien de la playlist :https://www.youtube.com/watch?v=W3gAzLwfIP0&list=PLlrATfBNZ98foTJPJ_Ev03o2oq3-GGOS2
+    //Initialisation d'OpenGL pour l'affichage. Utilisation de la série tutoriel de The Cherno pour la création des fichiers initiaux relatifs à OpenGl  
+    //lien de la playlist :https://www.youtube.com/watch?v=W3gAzLwfIP0&list=PLlrATfBNZ98foTJPJ_Ev03o2oq3-GGOS2
     
     GLFWwindow* window;
 
@@ -294,33 +186,48 @@ int main(){
     GLCall(glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA));
 
 
+    int TexID[32]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
 
-
-
-    // Tableau d'indices pour parcourir les points du tableau position dans le bon ordre pour tracer un disque avec la méthode "triangle Fan"
-    unsigned int indices[nombre_de_triangles*3];
-    for (unsigned int i=0; i<nombre_de_triangles;i++) {
-        indices[3*i]=0;
-        indices[3*i+1]=i+1;
-        indices[3*i+2]=i+2;
-    }
-    //Tableau d'indice indiquant l'ordre de parcours de la position_carre pour tracer un rectacle 
-    unsigned int indices_densite[6] = {0,1,2,1,2,3};
-
-    //déclaration des tableaux qui contiendront les positions des points pour un cercle avec la méthode "Triangle Fan" ou un Carré.
-    float position[nombre_de_points*2];
-    float position_carre[4*2];
-    
-    // Tableau contenant les couleurs utilisées pour dessiner un élément. En RGB entre 0 et 1
-    float* clear_color = (float*)malloc(3*sizeof(float));
-    clear_color[0]=1;
-    clear_color[1]=0;
-    clear_color[2]=0;
+    glm::mat4 proj = glm::ortho(-1.0,1.0,-1.0,1.0,-1.0,1.0);
+    glm::mat4 view=glm::translate(glm::mat4(1.0),glm::vec3(0,0,0));
+    glm::mat4 model=glm::translate(glm::mat4(1.0),glm::vec3(0,0,0));
+    glm::mat4 mvp = proj * view * model;
 
     // Initialisation des objets nécessaire pour l'affichage
-    Shader triangle_shader("OPENGL/res/shaders/triangle.shader");
-    Shader disque_shader("OPENGL/res/shaders/disque.shader");
+    Shader densite_shader("OPENGL/res/shaders/densite.shader");
+    Shader fluide_shader("OPENGL/res/shaders/fluide.shader");
     Renderer renderer;
+    fluide_shader.Bind();
+
+    Texture t1("OPENGL/res/textures/eau.png");
+    Texture t2("OPENGL/res/textures/eau1.png");
+    Texture t3("OPENGL/res/textures/eau2.png");
+    Texture t4("OPENGL/res/textures/eau3.png");
+
+    Texture t5("OPENGL/res/textures/huile.png");
+    Texture t6("OPENGL/res/textures/huile2.png");
+    Texture t7("OPENGL/res/textures/huile3.png");
+    Texture t8("OPENGL/res/textures/huile4.png");
+    Texture texture=t1;
+    texture.Bind(0);
+    texture = t2;
+    texture.Bind(1);
+    texture = t3;
+    texture.Bind(2);
+    texture = t4;
+    texture.Bind(3);
+    texture = t5;
+    texture.Bind(4);
+    texture = t6;
+    texture.Bind(5);
+    texture = t7;
+    texture.Bind(6);
+    texture = t8;
+    texture.Bind(7);
+
+    
+
+
 
     //initialisation de ImGui
     ImGui::CreateContext();
@@ -331,21 +238,23 @@ int main(){
 
     while (initial && (!glfwWindowShouldClose(window)))
     {
-        /* Render here */
-        renderer.Clear();
-        ImGui_ImplGlfwGL3_NewFrame();
-        //fenetre_ImGui(&rayon_collision,&g, &logg, &multiplicateur_pression, &logmp, &multiplicateur_pression_proche, &logmpp, &densite_visee, &dt,  &logdt, &rayon_influence, &coeff_amorti, &coeff_viscosite, &sourisx, &sourisy, &rayon_action_autour_curseur, &puissance_action_autour_curseur,&sens_action_clique_gauche, &logpacg,&coeff_adherence, &logvc , &vitesse_caracteristique,&opacite,&flou,&affiche_densite, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key,&pause);
+
+
+
+        ImGui_ImplGlfwGL3_NewFrame();        
+        
         fenetre_principale("principale", &sourisx, &sourisy, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key, &dt,
  &rayon_influence, &vx_boite, &vy_boite, &rayon_action_autour_curseur, &puissance_action_autour_curseur, &sens_action_clique_gauche,
  &affiche_densite, &flou, &pause_change, &pause, &opacite, &affiche_vitesses_colorees, &vitesse_caracteristique, &logdt, &logpacg, &logvc);
 
         fenetre_liquide("fluide 1", &rayon_collision, &g, &masse, &multiplicateur_pression, &multiplicateur_pression_proche, &densite_visee,
- &coeff_amorti, &coeff_viscosite, &coeff_adherence, &logg, &logmp, &logmpp, &logvisc);
+ &coeff_amorti, &coeff_viscosite, &coeff_adherence, &logg, &logmp, &logmpp, &logvisc,&texture_debut,&texture_fin);
         if (nombre_de_particules2>0){
             fenetre_liquide("fluide 2", &rayon_collision2, &g2, &masse2, &multiplicateur_pression2, &multiplicateur_pression_proche2, &densite_visee2,
- &coeff_amorti2, &coeff_viscosite2, &coeff_adherence2, &logg2, &logmp2, &logmpp2, &logvisc2);
+ &coeff_amorti2, &coeff_viscosite2, &coeff_adherence2, &logg2, &logmp2, &logmpp2, &logvisc2,&texture_debut2,&texture_fin2);
             fenetre_interaction( "mélange", &densite_visee_melange, &pression_melange,  &logpmel, &logppmel, &pression_proche_melange, &viscosite_melange, &logviscmel);
         }
+        //Fenetre ImGui permettant d'initialiser les nombres de particules et de valider
         ImGui::Begin("Validation des conditions initiales");
         {
             ImGui::InputInt("Nombre de particules 1",&nb);
@@ -369,9 +278,27 @@ int main(){
 
     Ensemble fluide = Ensemble(nombre_de_particules,rayon_collision);
     Ensemble fluide2 = Ensemble(nombre_de_particules2,rayon_collision);
+    
+    //Tableau pour tracer tous les point en un seul "draw"
+
+    unsigned int* indices_fluide = (unsigned int*)malloc(nombre_de_particules*6*sizeof(unsigned int));
+    unsigned int* indices_fluide2 = (unsigned int*)malloc(nombre_de_particules2*6*sizeof(unsigned int));
+
+    rempli_indice(indices_fluide,nombre_de_particules);
+    rempli_indice(indices_fluide2,nombre_de_particules2);
+
+    //Par point : xpoint,ypoint,xparticule,yparticule,R,G,B,A,TexCoordx,TexCoordy,TexID,rayon_collision²,rayon_influence²
+    //4 points par particule
+    float* info_points = (float*)malloc(nombre_de_particules*4*13*sizeof(float));
+    float* info_points2 = (float*)malloc(nombre_de_particules2*4*13*sizeof(float));
+
+    // idem pour la densite
+    unsigned int* indices_densite = (unsigned int*)malloc(resolution_densite*resolution_densite*6*sizeof(unsigned int));
+    rempli_indice(indices_densite,resolution_densite*resolution_densite);
+    float* info_densite = (float*)malloc(resolution_densite*resolution_densite*4*5*sizeof(float));
 
 
-   
+    
 
 
    
@@ -382,127 +309,87 @@ int main(){
     {
         /* Render here */
         renderer.Clear();
+
         ImGui_ImplGlfwGL3_NewFrame();
-        //fenetre_ImGui(&rayon_collision,&g, &logg, &multiplicateur_pression, &logmp, &multiplicateur_pression_proche, &logmpp, &densite_visee, &dt,  &logdt, &rayon_influence, &coeff_amorti, &coeff_viscosite, &sourisx, &sourisy, &rayon_action_autour_curseur, &puissance_action_autour_curseur,&sens_action_clique_gauche, &logpacg,&coeff_adherence, &logvc , &vitesse_caracteristique,&opacite,&flou,&affiche_densite, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key,&pause);
+        // actualise les constante à l'aide d'ImGui
         fenetre_principale("dodo", &sourisx, &sourisy, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key, &dt,
  &rayon_influence, &vx_boite, &vy_boite, &rayon_action_autour_curseur, &puissance_action_autour_curseur, &sens_action_clique_gauche,
  &affiche_densite, &flou, &pause_change, &pause, &opacite, &affiche_vitesses_colorees, &vitesse_caracteristique, &logdt, &logpacg, &logvc);
 
         fenetre_liquide("fluide 1", &rayon_collision, &g, &masse, &multiplicateur_pression, &multiplicateur_pression_proche, &densite_visee,
- &coeff_amorti, &coeff_viscosite, &coeff_adherence, &logg, &logmp, &logmpp, &logvisc);
+ &coeff_amorti, &coeff_viscosite, &coeff_adherence, &logg, &logmp, &logmpp, &logvisc,&texture_debut,&texture_fin);
         if (nombre_de_particules2>0){
             fenetre_liquide("fluide 2", &rayon_collision2, &g2, &masse2, &multiplicateur_pression2, &multiplicateur_pression_proche2, &densite_visee2,
- &coeff_amorti2, &coeff_viscosite2, &coeff_adherence2, &logg2, &logmp2, &logmpp2, &logvisc2);
+ &coeff_amorti2, &coeff_viscosite2, &coeff_adherence2, &logg2, &logmp2, &logmpp2, &logvisc2,&texture_debut2,&texture_fin2);
             fenetre_interaction( "mélange", &densite_visee_melange, &pression_melange,  &logpmel, &logppmel, &pression_proche_melange, &viscosite_melange, &logviscmel);
         }
 
         if (affiche_densite){
-            float pas =2.0/resolution_densite;
-            for (unsigned int i=0;i<resolution_densite*resolution_densite;i++){
-                position_carre[0]=-1.0+i%resolution_densite*pas;
-                position_carre[1]=-1.0+i/resolution_densite*pas;
-                position_carre[2]=-1.0+(i%resolution_densite+1)*pas;
-                position_carre[3]=-1.0+i/resolution_densite*pas;
-                position_carre[4]=-1.0+i%resolution_densite*pas;
-                position_carre[5]=-1.0+(i/resolution_densite+1)*pas;
-                position_carre[6]=-1.0+(i%resolution_densite+1)*pas;
-                position_carre[7]=-1.0+(i/resolution_densite+1)*pas;
 
-                float densité_grille= fluide.densite_ponctuelle_visee(position_carre[0]+pas/2,position_carre[1]+pas/2,&fluide2);
-                
-                
-                float r=mini(1.0,maxi(0.0,densité_grille/densite_visee -1));
-                float g=mini(0.0,pow(mini(abs(densité_grille/densite_visee),abs(2-densité_grille/densite_visee)),4));
-                float b=maxi(0.0,1-densité_grille/densite_visee);
+            position_couleur_densite(&fluide,&fluide2,info_densite,densite_visee,resolution_densite);
 
-                triangle_shader.Bind();
-                triangle_shader.SetUniform4f("u_color",r,g,b,1.0f);            
-                VertexArray va;                
-                VertexBuffer vb(position_carre,4*2*sizeof(float));
-                VertexBufferLayout layout;
-                layout.Push<float>(2);
-                va.AddBuffer(vb,layout);
-                IndexBuffer ib(indices_densite,6);
-                renderer.Draw(va,ib,triangle_shader);
-
-            }
-
+            densite_shader.Bind();            
+            VertexArray va_d;                
+            VertexBuffer vb_d(info_densite,4*5*resolution_densite*resolution_densite*sizeof(float));
+            VertexBufferLayout layout_d;
+            layout_d.Push<float>(2);
+            layout_d.Push<float>(3);
+            va_d.AddBuffer(vb_d,layout_d);
+            IndexBuffer ib_d(indices_densite,6*resolution_densite*resolution_densite);
+            renderer.Draw(va_d,ib_d,densite_shader);
             
+   
         }
         
-
-        for (unsigned int i=0;i<nombre_de_particules;i++){
-            fluide.data[i].rayon = rayon_collision;
-            if (flou){
-                fluide.data[i].position_particule(nombre_de_points,rayon_influence,position );
-            }
-            else {
-                fluide.data[i].position_particule(nombre_de_points,rayon_collision,position );
-            }
-
-            if (affiche_vitesses_colorees){
-                clear_color=fluide.data[i].couleur(vitesse_caracteristique); 
-            }
-            else {
-                clear_color[0]=0.2;clear_color[1]=0.7;clear_color[2]=1;
-            }
-
-            disque_shader.Bind();
-            if (flou){
-                disque_shader.SetUniform4f("information",opacite/(densite_visee*rayon_influence),rayon_influence/2,(fluide.data[i].x+1)/2,(fluide.data[i].y+1)/2);
-            }
-            else {
-                disque_shader.SetUniform4f("information",10000,rayon_collision/2,(fluide.data[i].x+1)/2,(fluide.data[i].y+1)/2);
-            }
-            
-            disque_shader.SetUniform4f("u_color",clear_color[0],clear_color[1],clear_color[2],1.0f);
-                        
-            VertexArray va;                
-            VertexBuffer vb(position,nombre_de_points*2*sizeof(float));
-            VertexBufferLayout layout;
-            layout.Push<float>(2);
-            va.AddBuffer(vb,layout);
-            IndexBuffer ib(indices,3*nombre_de_triangles);
-            renderer.Draw(va,ib,disque_shader);
-        }
-
         
-        for (unsigned int i=0;i<nombre_de_particules2;i++){
-            
-            fluide2.data[i].rayon = rayon_collision;
-            if (flou){
-                fluide2.data[i].position_particule(nombre_de_points,rayon_influence,position );
-            }
-            else {
-                fluide2.data[i].position_particule(nombre_de_points,rayon_collision,position );
-            }
-            if (affiche_vitesses_colorees){
-                clear_color=fluide2.data[i].couleur(vitesse_caracteristique); 
-                clear_color[1]=clear_color[2];
-                clear_color[2]=0;
-            }
-            else {
-                clear_color[0]=1;clear_color[1]=1;clear_color[2]=0;
-            }
+        fluide.rempli_info_point(info_points,vitesse_caracteristique,opacite,affiche_vitesses_colorees, texture_debut,texture_fin);
+        fluide2.rempli_info_point(info_points2,vitesse_caracteristique,opacite,affiche_vitesses_colorees,texture_debut2,texture_fin2);
 
-            disque_shader.Bind();
-            if (flou){
-                disque_shader.SetUniform4f("information",opacite/(densite_visee*rayon_influence),rayon_influence/2,(fluide2.data[i].x+1)/2,(fluide2.data[i].y+1)/2);
-            }
-            else {
-                disque_shader.SetUniform4f("information",10000,rayon_collision/2,(fluide2.data[i].x+1)/2,(fluide2.data[i].y+1)/2);
-            }
-            
-            disque_shader.SetUniform4f("u_color",clear_color[0],clear_color[1],clear_color[2],1.0f);
-                        
-            VertexArray va;                
-            VertexBuffer vb(position,nombre_de_points*2*sizeof(float));
-            VertexBufferLayout layout;
-            layout.Push<float>(2);
-            va.AddBuffer(vb,layout);
-            IndexBuffer ib(indices,3*nombre_de_triangles);
-            renderer.Draw(va,ib,disque_shader);
-        }
+        fluide_shader.Bind();
+        fluide_shader.SetUniform32i("u_Texture",TexID);  
+        fluide_shader.SetUniformMat4f("u_MVP",mvp);
+
+        //Par point : xpoint,ypoint,xparticule,yparticule,R,G,B,A,TexCoordx,TexCoordy,TexID,rayon_collision²,rayon_influence²
+        VertexArray va;                
+        VertexBuffer vb(info_points,13*4*nombre_de_particules*sizeof(float));
+        VertexBufferLayout layout;
+
+        layout.Push<float>(2);
+        layout.Push<float>(2);
+        layout.Push<float>(4);
+        layout.Push<float>(2);
+        layout.Push<float>(1);
+        layout.Push<float>(2);
+
+        va.AddBuffer(vb,layout);
+        IndexBuffer ib(indices_fluide,6*fluide.nombre_de_particules);
+        renderer.Draw(va,ib,fluide_shader);
+
+
+
+        //Fluide 2
+        fluide_shader.Bind();
+        fluide_shader.SetUniform32i("u_Texture",TexID);  
+        fluide_shader.SetUniformMat4f("u_MVP",mvp);
+
+        //Par point : xpoint,ypoint,xparticule,yparticule,R,G,B,A,TexCoordx,TexCoordy,TexID,rayon_collision²,rayon_influence²
+        VertexArray va2;                
+        VertexBuffer vb2(info_points2,13*4*nombre_de_particules2*sizeof(float));
+        VertexBufferLayout layout2;
+
+        layout2.Push<float>(2);
+        layout2.Push<float>(2);
+        layout2.Push<float>(4);
+        layout2.Push<float>(2);
+        layout2.Push<float>(1);
+        layout2.Push<float>(2);
+
+        va2.AddBuffer(vb2,layout2);
+        IndexBuffer ib2(indices_fluide2,6*fluide2.nombre_de_particules);
+        renderer.Draw(va2,ib2,fluide_shader);
+
+
+
         if (! pause){
             fluide.actualise_constantes(rayon_collision,g,masse,multiplicateur_pression,multiplicateur_pression_proche,densite_visee,dt,rayon_influence,coeff_amorti,coeff_viscosite,sourisx,sourisy,rayon_action_autour_curseur,puissance_action_autour_curseur,clique_gauche,clique_droit,a_key,z_key,e_key,q_key,s_key,d_key,pause);
             fluide2.actualise_constantes(rayon_collision2,g2,masse2,multiplicateur_pression2,multiplicateur_pression_proche2,densite_visee2,dt,rayon_influence,coeff_amorti2,coeff_viscosite2,sourisx,sourisy,rayon_action_autour_curseur,puissance_action_autour_curseur,clique_gauche,clique_droit,a_key,z_key,e_key,q_key,s_key,d_key,pause);
@@ -510,7 +397,7 @@ int main(){
             fluide2.frottement_paroi(vx_boite, vy_boite, -1, 1, -1, 1,coeff_adherence);
             fluide.frottement_paroi(vx_boite, vy_boite, -1, 1, -1, 1,coeff_adherence);
         }
-        
+
         //Affiche ImGui
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
