@@ -165,9 +165,10 @@ float influence_paroi(float dst,float rayon_influence, float coeff_adherence){
 }
 
 
-
+/**
+*actualise la liste d'indice contenant les clé et indice de chaque particules
+*/
 void Ensemble::liste_indice(int** liste) {
-    ////#pragma omp parallel for
     for (unsigned int i=0; i<nombre_de_particules;i++){
         liste[i] = (int*)malloc(2*sizeof(int));
         liste[i][0] = (int)i;
@@ -175,7 +176,9 @@ void Ensemble::liste_indice(int** liste) {
     }
 }
 
-
+/**
+*fonction prenant deux tableau a 2 element, et renoyant -1,0 ou 1 si le second élement de a est plus petit, egal ou grand que celui de b
+*/
 int compare(const void* a,const void* b){
     if( (*(int**)a)[1] < (*(int**)b)[1]  ) {return(-1);}
     if( (*(int**)a)[1] == (*(int**)b)[1]  ) {return(0);}
@@ -183,12 +186,16 @@ int compare(const void* a,const void* b){
     return(0);
 }
 
-
+/**
+*Trie la liste en fonction de la clé. Utile pour ne regarder que les particules proches.
+*/
 void Ensemble::tri_liste_indice( int** liste ){
     qsort(liste,nombre_de_particules,sizeof(int*),compare);
 }
 
-
+/**
+*donne le premier indice auquel trouver les particules de clé i 
+*/
 void Ensemble::liste_indice_debut(int* debut_indice,int** liste){
     for (unsigned int i=0;i<nombre_de_particules;i++){debut_indice[i]=-1;}
     int temp =-1;
@@ -505,7 +512,6 @@ void Ensemble::pression_ponctuelle(unsigned int n,  float* pression,Ensemble* l2
 
 
     //pression de 1 avec 1
-    //#pragma omp parallel for
     for(unsigned int i=0;i<9;i++){
         int j=indice_debut[liste_cellules[i]];
         if (j>=0) {
@@ -546,7 +552,6 @@ void Ensemble::pression_ponctuelle(unsigned int n,  float* pression,Ensemble* l2
     } //Pression de 1 avec 2 (*l2).
     
     if (((*l2).nombre_de_particules>0)){
-        //#pragma omp parallel for
         for(unsigned int i=0;i<9;i++){
             int j=(*l2).indice_debut[liste_cellules2[i]];
             if (j>=0) {
@@ -592,7 +597,6 @@ void Ensemble::pression_ponctuelle(unsigned int n,  float* pression,Ensemble* l2
 
 void Ensemble::force_pression(Ensemble* l2, float* d1, float* d2,float pression_melange,float densite_visee_melange){
     float* pression = (float*)malloc(2*sizeof(float));
-    ////#pragma omp parallel for
     for(unsigned int i=0; i<nombre_de_particules;i++){
         pression_ponctuelle(i,pression,l2,d1,d2, pression_melange, densite_visee_melange);
         data[i].vx+=dt*pression[0]/d1[i];
@@ -619,7 +623,6 @@ void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* pression,Ensem
     
 
  //pression de 1 avec 1
-    ////#pragma omp parallel for
     for(unsigned int i=0;i<9;i++){
         int j=indice_debut[liste_cellules[i]];
         if (j>=0) {
@@ -659,7 +662,6 @@ void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* pression,Ensem
         }
     }
     if ((*l2).nombre_de_particules>0){
-        ////#pragma omp parallel for
         for(unsigned int i=0;i<9;i++){
             int j=(*l2).indice_debut[liste_cellules2[i]];
             if (j>=0) {
@@ -706,7 +708,6 @@ void Ensemble::pression_ponctuelle_proche(unsigned int n,  float* pression,Ensem
 
 void Ensemble::force_pression_proche(Ensemble* l2, float* d1, float* d2,float pression_proche_melange){
     float* pression = (float*)malloc(2*sizeof(float));
-    ////#pragma omp parallel for
     for(unsigned int i=0; i<nombre_de_particules;i++){
         pression_ponctuelle_proche(i,pression,l2,d1,d2,pression_proche_melange);
         data[i].vx+=dt*pression[0]/d1[i];
@@ -725,8 +726,7 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2,float vis
     int* liste_cellules = (int*)malloc(9*sizeof(int));
     int* liste_cellules2 = (int*)malloc(9*sizeof(int));
     rempli_listes(l2,coord,liste_cellules,liste_cellules2);
-
-    ////#pragma omp parallel for
+    
     for(unsigned int i=0;i<9;i++){
         int j=indice_debut[liste_cellules[i]];
         if (j>=0) {
@@ -746,7 +746,6 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2,float vis
     }
 
     if((*l2).nombre_de_particules>0){
-        ////#pragma omp parallel for
         for(unsigned int i=0;i<9;i++){
             int j=(*l2).indice_debut[liste_cellules2[i]];
             if (j>=0) {
@@ -774,7 +773,6 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2,float vis
 
 void Ensemble::visc(Ensemble* l2, float* d1,float viscosite_melange){
     float* viscosite = (float*)malloc(2*sizeof(float));
-    ////#pragma omp parallel for
     for(unsigned int i=0; i<nombre_de_particules;i++){
         visc_ponctuelle(i,viscosite,l2,viscosite_melange);
         data[i].vx += dt*viscosite[0]/d1[i];
