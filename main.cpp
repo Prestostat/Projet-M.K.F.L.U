@@ -394,6 +394,8 @@ int main(){
     //ferme ImGUi
     ImGui_ImplGlfwGL3_Shutdown();
     ImGui::DestroyContext();
+
+    free(indices_fluide);free(indices_fluide2);free(info_points);free(info_points2);free(indices_densite);free(info_densite);
     return(0);
 
 }
