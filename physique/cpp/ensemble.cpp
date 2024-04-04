@@ -307,30 +307,34 @@ void Ensemble::rempli_listes(Ensemble* f,int* coord, int* liste_cellules,int* li
 }
 
  float Ensemble::densite_ponctuelle_visee(float ex, float ey,Ensemble* f){
-    float d=0;
+    float d=0; // densité
     int* coord = (int*)malloc(2*sizeof(int));
     coordonnee(coord,ex,ey,rayon_influence);            
     int* liste_cellules = (int*)malloc(9*sizeof(int));
     int* liste_cellules2 = (int*)malloc(9*sizeof(int));
     rempli_listes(f,coord,liste_cellules,liste_cellules2);
     float a = 0; //valeur de l'aire qui est en dehors de la boîte
-
+    // côté gauche
     if ((ex-rayon_influence)<-1){
         float diff = 1+ex;
         a = aire(rayon_influence, diff);
         }
+     // côté droit
     if ((ex+rayon_influence)>1){
         float diff = 1-ex;
         a = aire(rayon_influence, diff);
         }
+     // bas
     if ((ey-rayon_influence)<-1){
         float diff = 1+ey;
         a = aire(rayon_influence, diff);
         }
+     // haut
     if ((ey+rayon_influence)>1){
         float diff = 1-ey;
         a = aire(rayon_influence, diff);
         }
+     // coin bas gauche
     if(((ex-rayon_influence)<-1) && ((ey-rayon_influence)<-1)){
         float diff_x = 1+ex;
         float diff_y = 1+ey;
@@ -340,6 +344,7 @@ void Ensemble::rempli_listes(Ensemble* f,int* coord, int* liste_cellules,int* li
         float x_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_y*diff_y) - diff_x, 0);
         a -= (aire_triangle(y_1, x_1) + pow((x_1+y_1)/2, 2)*(M_PI/4 - 0.5));
     }
+     // coin haut gauche
     if(((ex-rayon_influence)<-1) && ((ey+rayon_influence)>1)){
         float diff_x = 1+ex;
         float diff_y = 1-ey;
@@ -349,6 +354,7 @@ void Ensemble::rempli_listes(Ensemble* f,int* coord, int* liste_cellules,int* li
         float x_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_y*diff_y) - diff_x, 0);
         a -= (aire_triangle(y_1, x_1) + pow((x_1+y_1)/2, 2)*(M_PI/4 - 0.5));
     }
+     // coin bas droit
     if(((ex+rayon_influence)>1) && ((ey-rayon_influence)<-1)){
         float diff_x = 1-ex;
         float diff_y = 1+ey;
@@ -358,6 +364,7 @@ void Ensemble::rempli_listes(Ensemble* f,int* coord, int* liste_cellules,int* li
         float x_1 = maxi(sqrt(rayon_influence*rayon_influence - diff_y*diff_y) - diff_x, 0);
         a -= (aire_triangle(y_1, x_1) + pow((x_1+y_1)/2, 2)*(M_PI/4 - 0.5));
     }
+     // coin haut droit
     if(((ex+rayon_influence)>1) && ((ey+rayon_influence)>1)){
         float diff_x = 1-ex;
         float diff_y = 1-ey;
@@ -467,7 +474,7 @@ void interaction(Ensemble* l1,Ensemble* l2,float pression_melange,float pression
 }
 
 void Ensemble::addforce2(float* d1,Ensemble* l2,float* d2,float pression_melange,float pression_proche_melange,float densite_visee_melange,float viscosite_melange){
-
+    // Application des forces en parallèle
      #pragma omp parallel
     {
         #pragma omp sections
@@ -502,8 +509,8 @@ void Ensemble::addforce2(float* d1,Ensemble* l2,float* d2,float pression_melange
 
 
 void Ensemble::pression_ponctuelle(unsigned int n,  float* pression,Ensemble* l2, float* d1, float* d2,float pression_melange,float densite_visee_melange){
-    pression[0]=0;
-    pression[1]=0;
+    pression[0]=0;//diréction x
+    pression[1]=0;//diréction y
     int* coord = (int*)malloc(2*sizeof(int));
     coordonnee(coord,data[n].x,data[n].y,rayon_influence);           
     int* liste_cellules = (int*)malloc(9*sizeof(int));
@@ -549,7 +556,8 @@ void Ensemble::pression_ponctuelle(unsigned int n,  float* pression,Ensemble* l2
                 }
             }
         }
-    } //Pression de 1 avec 2 (*l2).
+    } 
+    //Pression de 1 avec 2 (*l2).
     
     if (((*l2).nombre_de_particules>0)){
         for(unsigned int i=0;i<9;i++){
@@ -719,8 +727,8 @@ void Ensemble::force_pression_proche(Ensemble* l2, float* d1, float* d2,float pr
 }
 
 void Ensemble::visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2,float viscosite_melange){
-    visc[0]=0;
-    visc[1]=0;
+    visc[0]=0;// diréction x
+    visc[1]=0;// direction y
     int* coord = (int*)malloc(2*sizeof(int));
     coordonnee(coord,data[n].x,data[n].y,rayon_influence);           
     int* liste_cellules = (int*)malloc(9*sizeof(int));
@@ -744,7 +752,7 @@ void Ensemble::visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2,float vis
             }
         }
     }
-
+    // int avec fluide 2
     if((*l2).nombre_de_particules>0){
         for(unsigned int i=0;i<9;i++){
             int j=(*l2).indice_debut[liste_cellules2[i]];
