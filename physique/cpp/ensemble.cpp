@@ -45,7 +45,7 @@ Ensemble::~Ensemble(){
     if (indices!=nullptr){
         delete[] indices;
     }
-} // a modifier pour delete tous les tableaux
+}
 
 
 Ensemble::Ensemble(const Ensemble& other) {
