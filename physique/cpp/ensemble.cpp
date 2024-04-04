@@ -160,7 +160,8 @@ void Ensemble::frottement_paroi(float vx_paroi, float vy_paroi, float xlim_d, fl
 
 
 float influence_paroi(float dst,float rayon_influence, float coeff_adherence){
-    float f=coeff_adherence*(1-pow(dst/rayon_influence,2));// A normaliser pour que la force totale ne dépende que du coeff(comme la densite)
+    Norm_f = 2*PI*rayon_influence/3;
+    float f=coeff_adherence*(1-pow(dst/rayon_influence,2))/Norm_f;    
     return(f);
 }
 
