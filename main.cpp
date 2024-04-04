@@ -185,9 +185,9 @@ int main(){
     GLCall(glEnable(GL_BLEND));
     GLCall(glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA));
 
-
-    int TexID[32]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
-
+    
+    int TexID[32]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};//utile pour avoir plusieurs texture par fluide
+    // matrice de transformation, mais peu utilisé dans notre cas
     glm::mat4 proj = glm::ortho(-1.0,1.0,-1.0,1.0,-1.0,1.0);
     glm::mat4 view=glm::translate(glm::mat4(1.0),glm::vec3(0,0,0));
     glm::mat4 model=glm::translate(glm::mat4(1.0),glm::vec3(0,0,0));
@@ -198,50 +198,33 @@ int main(){
     Shader fluide_shader("OPENGL/res/shaders/fluide.shader");
     Renderer renderer;
     fluide_shader.Bind();
-
-    Texture t1("OPENGL/res/textures/eau.png");
-    Texture t2("OPENGL/res/textures/eau1.png");
-    Texture t3("OPENGL/res/textures/eau2.png");
-    Texture t4("OPENGL/res/textures/eau3.png");
-
-    Texture t5("OPENGL/res/textures/huile.png");
-    Texture t6("OPENGL/res/textures/huile2.png");
-    Texture t7("OPENGL/res/textures/huile3.png");
-    Texture t8("OPENGL/res/textures/huile4.png");
-    Texture texture=t1;
-    texture.Bind(0);
-    texture = t2;
-    texture.Bind(1);
-    texture = t3;
-    texture.Bind(2);
-    texture = t4;
-    texture.Bind(3);
-    texture = t5;
-    texture.Bind(4);
-    texture = t6;
-    texture.Bind(5);
-    texture = t7;
-    texture.Bind(6);
-    texture = t8;
-    texture.Bind(7);
-
+    // importation des textures et bind de celles ci.
+    Texture t1("OPENGL/res/textures/eau.png");Texture t2("OPENGL/res/textures/eau1.png");
+    Texture t3("OPENGL/res/textures/eau2.png");Texture t4("OPENGL/res/textures/eau3.png");
+    Texture t5("OPENGL/res/textures/huile.png");Texture t6("OPENGL/res/textures/huile2.png");
+    Texture t7("OPENGL/res/textures/huile3.png");Texture t8("OPENGL/res/textures/huile4.png");
     
-
-
-
+    Texture texture=t1;texture.Bind(0);texture = t2;texture.Bind(1);
+    texture = t3;texture.Bind(2);texture = t4;texture.Bind(3);
+    texture = t5;texture.Bind(4);texture = t6;texture.Bind(5);
+    texture = t7;texture.Bind(6);texture = t8;texture.Bind(7);
+    
+    
+    
     //initialisation de ImGui
     ImGui::CreateContext();
     ImGui_ImplGlfwGL3_Init(window, true);
     ImGui::StyleColorsDark();
     
 
-
+    //Initialisation des particules et des paramètres avant le début de la simulation
     while (initial && (!glfwWindowShouldClose(window)))
     {
 
 
 
         ImGui_ImplGlfwGL3_NewFrame();        
+        // actualise les constante à l'aide d'ImGui
         
         fenetre_principale("principale", &sourisx, &sourisy, &clique_gauche, &clique_droit, &a_key, &z_key, &e_key, &q_key, &s_key, &d_key, &dt,
  &rayon_influence, &vx_boite, &vy_boite, &rayon_action_autour_curseur, &puissance_action_autour_curseur, &sens_action_clique_gauche,
@@ -254,6 +237,8 @@ int main(){
  &coeff_amorti2, &coeff_viscosite2, &coeff_adherence2, &logg2, &logmp2, &logmpp2, &logvisc2,&texture_debut2,&texture_fin2);
             fenetre_interaction( "mélange", &densite_visee_melange, &pression_melange,  &logpmel, &logppmel, &pression_proche_melange, &viscosite_melange, &logviscmel);
         }
+
+        
         //Fenetre ImGui permettant d'initialiser les nombres de particules et de valider
         ImGui::Begin("Validation des conditions initiales");
         {
@@ -324,6 +309,7 @@ int main(){
             fenetre_interaction( "mélange", &densite_visee_melange, &pression_melange,  &logpmel, &logppmel, &pression_proche_melange, &viscosite_melange, &logviscmel);
         }
 
+        // calcul et affichage de la densitée si l'option est activée
         if (affiche_densite){
 
             position_couleur_densite(&fluide,&fluide2,info_densite,densite_visee,resolution_densite);
@@ -341,7 +327,7 @@ int main(){
    
         }
         
-        
+        // rempli les informations pour l'affichages des particules, Par point : xpoint,ypoint,xparticule,yparticule,R,G,B,A,TexCoordx,TexCoordy,TexID,rayon_collision²,rayon_influence²
         fluide.rempli_info_point(info_points,vitesse_caracteristique,opacite,affiche_vitesses_colorees, texture_debut,texture_fin);
         fluide2.rempli_info_point(info_points2,vitesse_caracteristique,opacite,affiche_vitesses_colorees,texture_debut2,texture_fin2);
 
