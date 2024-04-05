@@ -57,7 +57,7 @@ Ensemble::Ensemble(const Ensemble& other) {
 }
 
 void Ensemble::actualise_constantes(float rayon_collision_,float g_,float masse_,float multiplicateur_pression_,float multiplicateur_pression_proche_,float densite_visee_,float dt_,float rayon_influence_,float coeff_amorti_,float coeff_viscosite_,float sourisx_,float sourisy_,float rayon_action_clique_gauche_,float puissance_action_clique_gauche_,bool clique_gauche_,bool clique_droit_,bool a,bool z,bool e,bool q,bool s, bool d, bool pause_){
-    //Actualise les constantes de l'ensemble, car elles peuvent changer a cause de ImGui
+    //Actualise les constantes de l'ensemble, car elles peuvent changer à cause de ImGui
     rayon_collision = rayon_collision_;
     g = g_;
     masse =masse_;
@@ -94,7 +94,7 @@ void Ensemble::gravite() {
 
 
 void Ensemble::deplacement() {
-    //Effectue le déplacement des particules pour passer au positions de l'étape suivante
+    //Effectue le déplacement des particules pour passer aux positions de l'étape suivante
     ////#pragma omp parallel for
     for (unsigned int i=0; i<nombre_de_particules;i++) {
         data[i].x+=data[i].vx*dt;
@@ -104,8 +104,8 @@ void Ensemble::deplacement() {
 }
 
 void Ensemble::actualise_listes(){
-    //Actualise les lites indices (contenant la liste des particules et de la clé  de la case dans laquelle elles sont)
-    // et indices début, donnant l'indice ou trouver la première particule en fonction d'une clé de case.
+    //Actualise les listes indices (contenant la liste des particules et de la clé de la case dans laquelle elles sont)
+    // et indices début, donnant l'indice où trouver la première particule en fonction d'une clé de case.
     liste_indice (indices);
     tri_liste_indice(indices);
     liste_indice_debut(indice_debut,indices);
@@ -136,8 +136,7 @@ float aire_triangle(float base, float hauteur){
 void Ensemble::frottement_paroi(float vx_paroi, float vy_paroi, float xlim_d, float xlim_g, float ylim_h, float ylim_b,float coeff_adherence){
     //d, g, h, b pour droite, gauche, haut, bas; droite signifie par exemple qu'on est à droite de la paroi
 
-    //ne marchera pas pour un cercle, mais flemme pour le moment de rajouter une variable qui correspond 
-    //à la normale donc tout sera droit pour le moment
+    //ne marchera pas pour un obstacle avec des formes arrondies
 
     //(v-v_paroi).n = 0
     for(unsigned int i = 0; i<nombre_de_particules; i++){
@@ -167,7 +166,7 @@ float influence_paroi(float dst,float rayon_influence, float coeff_adherence){
 
 
 /**
-*actualise la liste d'indice contenant les clé et indice de chaque particules
+*actualise la liste d'indices contenant les clé et indice de chaque particule
 */
 void Ensemble::liste_indice(int** liste) {
     for (unsigned int i=0; i<nombre_de_particules;i++){
@@ -178,7 +177,7 @@ void Ensemble::liste_indice(int** liste) {
 }
 
 /**
-*fonction prenant deux tableau a 2 element, et renoyant -1,0 ou 1 si le second élement de a est plus petit, egal ou grand que celui de b
+*fonction prenant deux tableaux a 2 éléments, et renoyant -1,0 ou 1 si le second élement de a est plus petit, égal ou grand que celui de b
 */
 int compare(const void* a,const void* b){
     if( (*(int**)a)[1] < (*(int**)b)[1]  ) {return(-1);}
@@ -210,8 +209,8 @@ void Ensemble::liste_indice_debut(int* debut_indice,int** liste){
 
 
 void Ensemble::force_souris(){
-    // Ajoute les différentes interaction entre l'utilisateur et le fluide, 960 est la taille de la fenètre d'affichage(carré).
-    // La position du curseur peut être faussé si l'écran d'affichage est trop petit (<960*960)
+    // Ajoute les différentes interactions entre l'utilisateur et le fluide, 960 est la taille de la fenêtre d'affichage(carré).
+    // La position du curseur peut être faussée si l'écran d'affichage est trop petit (<960*960)
     if (clique_gauche && sourisx>0 && sourisy>0 && sourisx<960 && sourisy<960){
         float x = 2*sourisx/960.0 -1;
         float y = -sourisy*2/960.0 +1;
@@ -411,7 +410,7 @@ void Ensemble::rempli_listes(Ensemble* f,int* coord, int* liste_cellules,int* li
             }
         }
     }
-    d+= a*densite_visee/(M_PI*rayon_influence*rayon_influence); //metttre cette ligne en commentaire pour avoir la version sans prise en compte de la densité des paroies de la fonction
+    d+= a*densite_visee/(M_PI*rayon_influence*rayon_influence); //metttre cette ligne en commentaire pour avoir la version sans prise en compte de la densité des parois de la fonction
 
     free(coord);free(liste_cellules);free(liste_cellules2);
     return(d);
@@ -510,8 +509,8 @@ void Ensemble::addforce2(float* d1,Ensemble* l2,float* d2,float pression_melange
 
 
 void Ensemble::pression_ponctuelle(unsigned int n,  float* pression,Ensemble* l2, float* d1, float* d2,float pression_melange,float densite_visee_melange){
-    pression[0]=0;//diréction x
-    pression[1]=0;//diréction y
+    pression[0]=0;//direction x
+    pression[1]=0;//direction y
     int* coord = (int*)malloc(2*sizeof(int));
     coordonnee(coord,data[n].x,data[n].y,rayon_influence);           
     int* liste_cellules = (int*)malloc(9*sizeof(int));
@@ -612,12 +611,7 @@ void Ensemble::force_pression(Ensemble* l2, float* d1, float* d2,float pression_
         data[i].vy+=dt*pression[1]/d1[i];
     }
     free(pression);
-    
-
 }
-
-
-
 
 
 
@@ -728,7 +722,7 @@ void Ensemble::force_pression_proche(Ensemble* l2, float* d1, float* d2,float pr
 }
 
 void Ensemble::visc_ponctuelle(unsigned int n,float* visc,Ensemble* l2,float viscosite_melange){
-    visc[0]=0;// diréction x
+    visc[0]=0;// direction x
     visc[1]=0;// direction y
     int* coord = (int*)malloc(2*sizeof(int));
     coordonnee(coord,data[n].x,data[n].y,rayon_influence);           
@@ -823,9 +817,9 @@ void Ensemble::rempli_info_point(float* ip,float vc,float opacite,bool affiche_v
         ip[index+26+9]=0;
         ip[index+39+8]=1;
         ip[index+39+9]=1;
-        // Reste des info, identiques pour les 4 points
+        // Reste des infos, identiques pour les 4 points
         for (unsigned j=0;j<4;j++){
-            //pisition de la particule
+            //position de la particule
             ip[index+j*13+2]=p.x;
             ip[index+j*13+3]=p.y;
             //RGBA
