@@ -1,7 +1,7 @@
 Projet M.K.F.L.U
 L.DAVID, A.BOURDEAUX,M.CODRON
 
-L'objectif du projet est de simuler un fluide. Le point de vu adopté est de faire une simulation reproduisant des comportements similaires à des fluides et non la création d'une simulation exacte d'un fluide réel.
+L'objectif du projet est de simuler un fluide. Le point de vue adopté est de faire une simulation reproduisant des comportements similaires à des fluides et non la création d'une simulation exacte d'un fluide réel.
 
 Nous travaillons dans un environnement linux (ubuntu), utilisons OpenGL, Dear ImGui et OpenMP en plus de la bibliothèque standard. Il convient de les installer pour pouvoir compiler et lancer les programmes (voir les commandes en fin de README).
 
