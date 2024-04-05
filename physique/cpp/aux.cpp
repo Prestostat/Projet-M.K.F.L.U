@@ -5,7 +5,7 @@ using namespace std;
 #define PI 3.14159265
 #define E 2.71828182846
 /**
-*rempli le tableau position des positions des 4 coins a partir du centre et de la taille du rectacle. Pas de rotation possible
+*remplit le tableau position des positions des 4 coins à partir du centre et de la taille du rectangle. Pas de rotation possible
 */
 
 void coord_carre(float* position_carre,float x,float y,float tx,float ty){
@@ -19,7 +19,7 @@ void coord_carre(float* position_carre,float x,float y,float tx,float ty){
     position_carre[7]=y+ty;
 }
 /**
-*fonction déterminant la couleur du pixel en fonction de la densitée au centre de celui ci. 
+*fonction déterminant la couleur du pixel en fonction de la densité au centre de celui-ci. 
 */
 void couleur_densite(float* couleur,float densite_visee,float densite){
     float r,g,b;
@@ -49,7 +49,7 @@ void couleur_densite(float* couleur,float densite_visee,float densite){
 
 
 /**
- * rempli le tableau info avec toutes les informations nécessaire pour afficher la densité
+ * remplit le tableau info avec toutes les informations nécessaires pour afficher la densité
  * x,y,R,G,B
 */
 void position_couleur_densite(Ensemble* f1,Ensemble* f2,float* info,float densite_visee,int res=960){
@@ -79,7 +79,7 @@ void position_couleur_densite(Ensemble* f1,Ensemble* f2,float* info,float densit
     free(couleur);free(carre);
 }
 /**
-    *Rempli le tableau li avec les indices pour afficher nb carre a partir de ses coins
+    *Remplit le tableau i avec les indices pour afficher nb carre a partir de ses coins
 */
 void rempli_indice(unsigned int* li, unsigned int nb){
     for (unsigned int i=0; i<nb;i++){
@@ -96,7 +96,7 @@ float mini(float a,float b){
     else{return(a);}
 }
 /**
-    * création de la fenetre principale ImGui pour changer des paramètres et détection de la position de la souris et de l'état des autres controles
+    * création de la fenêtre principale ImGui pour changer des paramètres et détection de la position de la souris et de l'état des autres contrôles
 */
 void fenetre_principale(const char* name,float* sourisx,float* sourisy,bool* clique_gauche,bool* clique_droit,bool* a_key,bool* z_key,bool* e_key,bool* q_key,bool* s_key,bool* d_key,float* dt,
 float* rayon_influence,float* vx_boite,float* vy_boite,float* rayon_action_autour_curseur,float* puissance_action_autour_curseur,int* sens_action_clique_gauche,
@@ -164,7 +164,7 @@ bool* affiche_densite,bool* flou,bool* pause_change,bool* pause,float* opacite,b
 }
 
 /**
-    * création de la fenetre ImGui pour changer les paramètres spécifique à un liquide
+    * création de la fenetre ImGui pour changer les paramètres spécifiques à un liquide
 */
 void fenetre_liquide(const char* name,float* rayon_collision,float* g,float* masse,float* multiplicateur_pression,float* multiplicateur_pression_proche,float* densite_visee,
 float* coeff_amorti,float* coeff_viscosite,float* coeff_adherence,float* logg,float* logmp,float* logmpp,float* logvisc,int* texd,int* texf){
@@ -198,7 +198,7 @@ float* coeff_amorti,float* coeff_viscosite,float* coeff_adherence,float* logg,fl
     ImGui::End();
 }
 /**
-    * création de la fenetre ImGui pour changer les paramètres spécifique à l'interaction entre les deux liquides
+    * création de la fenêtre ImGui pour changer les paramètres spécifiques à l'interaction entre les deux liquides
 */
 void fenetre_interaction(const char* name,float* densite_visee_melange,float* pression_melange, float* logpmel,float* logppmel,float* pression_proche_melange,float* viscosite_melange,float* logviscmel){
     ImGui::Begin(name);
