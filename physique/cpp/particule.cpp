@@ -75,7 +75,7 @@ void Particule::collision(float amorti){
 
 
 float fonction_influence(float x,float rayon_influence){
-    float volume = PI*pow(rayon_influence,4)/6; //normalisation pour que l'intégrale du volume de l'influence soit 1, a essayer en exponentielle décroissante ?
+    float volume = PI*pow(rayon_influence,4)/6; //normalisation pour que l'intégrale du volume de l'influence soit 1, à essayer en exponentielle décroissante ?
     return(pow((rayon_influence-x),2)/volume);
 }
 
