@@ -24,7 +24,7 @@ void Obstacle::collision_obstacle(Particule* data,float masse_particule, unsigne
                 data[m].vx*=-1*coeff_amorti_obstacle;
 
                 if (deplacement_ON_OFF){
-                    // on pourrai améliorer en calculant l'angle de collision
+                    // on pourrait améliorer en calculant l'angle de collision
                     // terme en (1-coeff_amorti_obstacle)*data[m].vx ou (1-coeff_amorti_obstacle)*data[m].vx*masse_particule/masse pour conservation d'énergie ça serait pas mal ? à moins que 1 - coeff_amorti_obstacle = masse_particule/masse 
                     vx_obs += data[m].vx*masse_particule/masse;
                     data[m].vx -= data[m].vx*masse_particule/masse;
@@ -37,7 +37,7 @@ void Obstacle::collision_obstacle(Particule* data,float masse_particule, unsigne
                     data[m].vx*=-1*coeff_amorti_obstacle;
 
                     if (deplacement_ON_OFF){
-                        // on pourrai améliorer en calculant l'angle de collision
+                        // on pourrait améliorer en calculant l'angle de collision
                         // terme en (1-coeff_amorti_obstacle)*data[m].vx ou (1-coeff_amorti_obstacle)*data[m].vx*masse_particule/masse pour conservation d'énergie ça serait pas mal ? à moins que 1 - coeff_amorti_obstacle = masse_particule/masse 
                         vx_obs += data[m].vx*masse_particule/masse;
                         data[m].vx -= data[m].vx*masse_particule/masse;
